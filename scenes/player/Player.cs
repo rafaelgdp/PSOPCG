@@ -13,10 +13,10 @@ public class Player : KinematicBody2D
     float minSpeed = 10F;
 
     [Export]
-    float jumpForce = -300F;
+    float jumpForce = -Global.Gravity * 0.59F;
 
     [Export]
-    float acceleration = 450F;
+    float acceleration = 2000F;
 
     [Export]
     Vector2 defaultSnapVector = Vector2.Down * 4f;
@@ -38,6 +38,22 @@ public class Player : KinematicBody2D
 
     public override void _PhysicsProcess(float delta) {
         
+        HandleMotion(delta);
+        motion = MoveAndSlideWithSnap(motion, snapVector, Vector2.Up, false, 4, Mathf.Deg2Rad(46), false);
+
+    }
+
+    private Vector2 scaleLeft = new Vector2(-1, 1);
+    private Vector2 scaleRight = new Vector2(1, 1);
+    private void HandleAnimation(float frameMotionX) {
+        if (frameMotionX < 0F) {
+            flipNodes.Scale = scaleLeft;
+        } else if (frameMotionX > 0F) {
+            flipNodes.Scale = scaleRight;
+        }
+    }
+
+    private void HandleMotion(float delta) {
         var frameMotion = Vector2.Zero;
         var horizontalMotion = GetHorizontalMotion();
         frameMotion.x += horizontalMotion * acceleration * delta;
@@ -45,7 +61,19 @@ public class Player : KinematicBody2D
         
         motion += frameMotion;
         motion.x = Mathf.Clamp(motion.x, -maxSpeed, maxSpeed);
-        motion.y = Mathf.Clamp(motion.y, -jumpForce, jumpForce);
+        motion.y = Mathf.Clamp(motion.y, -Mathf.Abs(jumpForce), Mathf.Abs(jumpForce));
+        
+        HandleAnimation(frameMotion.x);
+
+        if (IsOnFloor()) {
+            snapVector = Vector2.Zero;
+            if (Input.IsActionJustPressed("jump")) {
+                GD.Print("Here?");
+                motion.y = jumpForce;
+            }
+        } else {
+            snapVector = Vector2.Down * 1F;
+        }
 
         if (Mathf.Abs(horizontalMotion) < 0.2) { // no horizontal movement pressed
             // Apply friction
@@ -54,7 +82,6 @@ public class Player : KinematicBody2D
                 motion.x = 0F;
         }
 
-        motion = MoveAndSlideWithSnap(motion, Vector2.Up);
     }
 
     float GetHorizontalMotion() {
