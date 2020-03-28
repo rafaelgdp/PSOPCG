@@ -35,7 +35,7 @@ public class MapGenerator {
     private char[,] matrix;
     private Random random = new Random();
     private int floorZeroHeight = 3;
-    public MapGenerator(int width = 200, int height = 12, int globalOriginX = 0) {
+    public MapGenerator(int width = 10, int height = 12, int globalOriginX = 0) {
         this.width = width;
         this.height = height;
         this.leftmostIndex = 0;
@@ -49,39 +49,103 @@ public class MapGenerator {
     }
 
     private void initializeGround() {
-        for (int i = 0; i < this.width; i++) {
+        for (int i = LeftmostGlobalX; i < RightmostGlobalX; i++) {
             for (int j = 0; j < floorZeroHeight; j++) {
-                matrix[i, j] = 'G';
+                SetGlobalCell(i, j, 'G');
             }
         }
     }
 
     public char GetGlobalCell(int x, int y) {
+        y = Mathf.Abs(y); // Compatible with positive and negative Y values.
+        if (y >= Height) {
+            // If above y limits, simply return default (e.g. Blank).
+            return DefaultCell;
+        }
+
         if (x < LeftmostGlobalX || x > RightmostGlobalX) {
             regenerateChunkCenteredAt(x);
         }
 
-        if (y > 0 || y < -Height) {
-            // If below or above y limits, simply return default (e.g. Blank).
+        int localX = (leftmostIndex + x - LeftmostGlobalX) % width;
+        int localY = y;
+        return matrix[localX, localY];
+    }
+
+    public char SetGlobalCell(int x, int y, char newValue) {
+        
+        y = Mathf.Abs(y); // Compatible with positive and negative Y values.
+        if (y >= Height) {
+            // If above y limits, simply return default (e.g. Blank).
+            // And do NOTHING.
             return DefaultCell;
         }
 
+        if (x < LeftmostGlobalX || x > RightmostGlobalX) {
+            regenerateChunkCenteredAt(x);
+        }
+
         int localX = (leftmostIndex + x - LeftmostGlobalX) % width;
-        int localY = -y;
-        return matrix[localX, localY];
+        int localY = y;
+        var oldValue = matrix[localX, localY];
+        matrix[localX, localY] = newValue;
+        return oldValue;
     }
 
     private void regenerateChunkCenteredAt(int newCenterOriginX)
     {
-        int newLeftmostX = newCenterOriginX - (width / 2);
-        int newRightmostX = newLeftmostX + width;
-        int generatedRightLimit = Mathf.Min(newLeftmostX, LeftmostGlobalX);
-        int generatedLeftLimit = newLeftmostX;
-        
-        
-        generateGround(generatedLeftLimit, generatedRightLimit, newCenterOriginX);
+        // New limits
+        int newLeftmostGlobalX = newCenterOriginX - (width / 2);
+        int newRightmostGlobalX = newLeftmostGlobalX + width;
+
+        // Find intersection
+        if (newRightmostGlobalX > LeftmostGlobalX || newLeftmostGlobalX > RightmostGlobalX) {
+            // regenerate whole matrix
+            leftmostGlobalX = newLeftmostGlobalX;
+            leftmostIndex = 0;
+            generateGround(newLeftmostGlobalX, newRightmostGlobalX);
+        } else {
+            // There is partial intersection
+            // Regenerate new needed area
+            int intersectionLeftLimit = Mathf.Max(newLeftmostGlobalX, LeftmostGlobalX);
+            int intersectionRightLimit = Mathf.Min(newRightmostGlobalX, RightmostGlobalX);
+
+            int generationLeftLimit;
+            int generationRightLimit;
+            if (newLeftmostGlobalX < RightmostGlobalX) {
+                generationLeftLimit = RightmostGlobalX + 1;
+                generationRightLimit = newRightmostGlobalX;
+            } else {
+                generationLeftLimit = newLeftmostGlobalX;
+                generationRightLimit = LeftmostGlobalX - 1;
+            }
+
+            var newLeftmostIndex = getLocalXIndexFromGlobalX(newLeftmostGlobalX);
+            if (newLeftmostIndex == -1) {
+                var intersectionWidth = intersectionRightLimit - intersectionLeftLimit;
+                newLeftmostIndex = (leftmostIndex + intersectionWidth + 1) % width;
+            }
+            leftmostGlobalX = newLeftmostGlobalX;
+            leftmostIndex = newLeftmostIndex;
+            // var isNewChunkOnLeft = newLeftmostIndex < intersectionLeftLimit;
+            generateGround(generationLeftLimit, generationRightLimit);
+        }
     }
-    private void generateGround(int generatedLeftmostX, int generatedRightmostX, int newCenterOriginX) {
-        for (int i = 0; i < )
+
+    /*
+        Returns -1 if globalX is out of the buffered range.
+        Otherwise, returns the matrix column that corresponds to globalX.
+    */
+    private int getLocalXIndexFromGlobalX(int globalX) {
+        if (globalX < LeftmostGlobalX || globalX > RightmostGlobalX) return -1;
+        return globalX - LeftmostGlobalX;
+    }
+    private void generateGround(int generatedLeftmostX, int generatedRightmostX) {
+
+        for (int i = generatedLeftmostX; i < generatedRightmostX; i++) {
+            for (int j = 0; j < floorZeroHeight; j++) {
+                SetGlobalCell(i, j, 'N');
+            }
+        }
     }
 }
