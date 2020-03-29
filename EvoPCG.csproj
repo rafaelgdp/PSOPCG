@@ -56,6 +56,7 @@
     <Compile Include="autoloads\Global.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="scenes\DebugLabel.cs" />
+    <Compile Include="scenes\map_generator_test\MapGeneratorTest.cs" />
     <Compile Include="scenes\player\Player.cs" />
     <Compile Include="utils\GeneratedTileMap.cs" />
     <Compile Include="utils\MapGenerator.cs" />

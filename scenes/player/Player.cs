@@ -1,10 +1,12 @@
 using Godot;
-using System;
 
 public class Player : KinematicBody2D
 {
     [Signal]
     public delegate void PlayerReady(KinematicBody2D me);
+
+    [Signal]
+    public delegate void PlayerExitedScreen();
 
     [Export]
     float maxSpeed = 500F;
@@ -84,6 +86,9 @@ public class Player : KinematicBody2D
 
     }
 
+    private void OnExitedScreen() {
+        EmitSignal("PlayerExitedScreen");
+    }
     float GetHorizontalMotion() {
         return Input.GetActionStrength("ui_right") - Input.GetActionStrength("ui_left");
     } 

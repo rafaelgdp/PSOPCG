@@ -64,7 +64,7 @@ public class MapGenerator {
         }
 
         if (x < LeftmostGlobalX || x > RightmostGlobalX) {
-            regenerateChunkCenteredAt(x);
+            RegenerateChunkCenteredAt(x);
         }
 
         int localX = (leftmostIndex + x - LeftmostGlobalX) % width;
@@ -82,7 +82,7 @@ public class MapGenerator {
         }
 
         if (x < LeftmostGlobalX || x > RightmostGlobalX) {
-            regenerateChunkCenteredAt(x);
+            RegenerateChunkCenteredAt(x);
         }
 
         int localX = (leftmostIndex + x - LeftmostGlobalX) % width;
@@ -92,7 +92,7 @@ public class MapGenerator {
         return oldValue;
     }
 
-    private void regenerateChunkCenteredAt(int newCenterOriginX)
+    public void RegenerateChunkCenteredAt(int newCenterOriginX)
     {
         // New limits
         int newLeftmostGlobalX = newCenterOriginX - (width / 2);
