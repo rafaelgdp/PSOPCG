@@ -60,6 +60,8 @@
     <Compile Include="scenes\player\Player.cs" />
     <Compile Include="utils\GeneratedTileMap.cs" />
     <Compile Include="utils\MapGenerator.cs" />
+    <Compile Include="utils\GAMapGenerator.cs" />
+    <Compile Include="utils\MapIndividual.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

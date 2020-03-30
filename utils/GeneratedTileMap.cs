@@ -5,9 +5,9 @@ public class GeneratedTileMap : TileMap
 {
     [Export]
     private int cellSize = 64;
-    public MapGenerator mMapGenerator = new MapGenerator(10, 12, 0);
+    public GAMapGenerator mMapGenerator = new GAMapGenerator(20, 12, 0, 20, 0.05F);
 
-    Dictionary<char, int> tileFromCode = new Dictionary<char, int>() { 
+    Dictionary<char, int> tileDictionary = new Dictionary<char, int>() { 
         {'B', -1},
         {'G', 0},
         {'N', 1}
@@ -19,8 +19,7 @@ public class GeneratedTileMap : TileMap
     private int renderChunkWidth = 10;
     private int leftChunkLimit = 0;
     private int rightChunkLimit { get { return leftChunkLimit + renderChunkWidth; } }
-    public override void _Ready()
-    {
+    public override void _Ready() {
         UpdateWorldAroundX(0);
     }
 
@@ -32,9 +31,14 @@ public class GeneratedTileMap : TileMap
         for (int i = leftChunkLimit; i < rightChunkLimit; i++) {
             for(int j = 0; j > -mMapGenerator.Height; j--) { // Height is inverted
                 char cellCode = mMapGenerator.GetGlobalCell(i, j);
-                SetCell(i, j, tileFromCode[cellCode]);
+                SetCell(i, j, tileFromCode(cellCode));
             }
         }
+    }
+
+    int tileFromCode(char code) {
+        if (tileDictionary.ContainsKey(code)) return tileDictionary[code];
+        return tileDictionary['B'];
     }
 
     private void trimCells(int newLeftChunkLimit) {
@@ -44,13 +48,13 @@ public class GeneratedTileMap : TileMap
         if (newLeftChunkLimit < leftChunkLimit) {
             for (int i = newRightChunkLimit + 1; i <= rightChunkLimit; i++) {
                 for(int j = 0; j > -mMapGenerator.Height; j--) { // Height is inverted
-                    SetCell(i, j, tileFromCode['B']); // Set outer cells to blank
+                    SetCell(i, j, tileDictionary['B']); // Set outer cells to blank
                 }
             }
         } else {
             for (int i = leftChunkLimit; i < newLeftChunkLimit; i++) {
                 for(int j = 0; j > -mMapGenerator.Height; j--) { // Height is inverted
-                    SetCell(i, j, tileFromCode['B']); // Set outer cells to blank
+                    SetCell(i, j, tileDictionary['B']); // Set outer cells to blank
                 }
             }
         }

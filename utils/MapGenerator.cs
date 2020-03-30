@@ -24,18 +24,18 @@ public class MapGenerator {
     };
 
     public char DefaultCell { get { return TileCodes[0]; } } // Blank
-    private int width;
+    protected int width;
     public int Width { get { return width; } }
-    private int height;
+    protected int height;
     public int Height { get { return height; } }
-    private int leftmostGlobalX;
+    protected int leftmostGlobalX;
     public int LeftmostGlobalX { get { return leftmostGlobalX; } }
-    private int leftmostIndex = 0;
+    protected int leftmostIndex = 0;
     public int RightmostGlobalX { get { return leftmostGlobalX + width; }}
-    private char[,] matrix;
-    private Random random = new Random();
-    private int floorZeroHeight = 3;
-    public MapGenerator(int width = 10, int height = 12, int globalOriginX = 0) {
+    protected char[,] matrix;
+    protected Random random = new Random();
+    protected int floorZeroHeight = 3;
+    public MapGenerator(int width = 15, int height = 12, int globalOriginX = 0) {
         this.width = width;
         this.height = height;
         this.leftmostIndex = 0;
@@ -45,10 +45,10 @@ public class MapGenerator {
                 this.matrix[i, j] = 'B';
             }
         }
-        initializeGround();
+        initializeMap();
     }
 
-    private void initializeGround() {
+    protected void initializeMap() {
         for (int i = LeftmostGlobalX; i < RightmostGlobalX; i++) {
             for (int j = 0; j < floorZeroHeight; j++) {
                 SetGlobalCell(i, j, 'G');
@@ -103,7 +103,7 @@ public class MapGenerator {
             // regenerate whole matrix
             leftmostGlobalX = newLeftmostGlobalX;
             leftmostIndex = 0;
-            generateGround(newLeftmostGlobalX, newRightmostGlobalX);
+            generateMap(newLeftmostGlobalX, newRightmostGlobalX);
         } else {
             // There is partial intersection
             // Regenerate new needed area
@@ -112,12 +112,12 @@ public class MapGenerator {
 
             int generationLeftLimit;
             int generationRightLimit;
-            if (newLeftmostGlobalX < RightmostGlobalX) {
-                generationLeftLimit = RightmostGlobalX + 1;
-                generationRightLimit = newRightmostGlobalX;
-            } else {
+            if (newLeftmostGlobalX < LeftmostGlobalX) {
                 generationLeftLimit = newLeftmostGlobalX;
                 generationRightLimit = LeftmostGlobalX - 1;
+            } else {
+                generationLeftLimit = RightmostGlobalX + 1;
+                generationRightLimit = newRightmostGlobalX;
             }
 
             var newLeftmostIndex = getLocalXIndexFromGlobalX(newLeftmostGlobalX);
@@ -128,7 +128,7 @@ public class MapGenerator {
             leftmostGlobalX = newLeftmostGlobalX;
             leftmostIndex = newLeftmostIndex;
             // var isNewChunkOnLeft = newLeftmostIndex < intersectionLeftLimit;
-            generateGround(generationLeftLimit, generationRightLimit);
+            generateMap(generationLeftLimit, generationRightLimit);
         }
     }
 
@@ -136,11 +136,11 @@ public class MapGenerator {
         Returns -1 if globalX is out of the buffered range.
         Otherwise, returns the matrix column that corresponds to globalX.
     */
-    private int getLocalXIndexFromGlobalX(int globalX) {
+    protected int getLocalXIndexFromGlobalX(int globalX) {
         if (globalX < LeftmostGlobalX || globalX > RightmostGlobalX) return -1;
         return globalX - LeftmostGlobalX;
     }
-    private void generateGround(int generatedLeftmostX, int generatedRightmostX) {
+    protected virtual void generateMap(int generatedLeftmostX, int generatedRightmostX) {
 
         for (int i = generatedLeftmostX; i < generatedRightmostX; i++) {
             for (int j = 0; j < floorZeroHeight; j++) {
