@@ -99,7 +99,7 @@ public class MapGenerator {
         int newRightmostGlobalX = newLeftmostGlobalX + width;
 
         // Find intersection
-        if (newRightmostGlobalX > LeftmostGlobalX || newLeftmostGlobalX > RightmostGlobalX) {
+        if (newRightmostGlobalX < LeftmostGlobalX || newLeftmostGlobalX > RightmostGlobalX) {
             // regenerate whole matrix
             leftmostGlobalX = newLeftmostGlobalX;
             leftmostIndex = 0;
@@ -138,7 +138,7 @@ public class MapGenerator {
     */
     protected int getLocalXIndexFromGlobalX(int globalX) {
         if (globalX < LeftmostGlobalX || globalX > RightmostGlobalX) return -1;
-        return globalX - LeftmostGlobalX;
+        return (globalX - LeftmostGlobalX + leftmostIndex - 1) % width;
     }
     protected virtual void generateMap(int generatedLeftmostX, int generatedRightmostX) {
 
@@ -147,5 +147,90 @@ public class MapGenerator {
                 SetGlobalCell(i, j, 'N');
             }
         }
+    }
+
+    public override String ToString() {
+        String r = "";
+        for(int j = Height - 1; j >= 0; j--) {
+            r += $"{j,6:000000}: ";
+            for (int i = 0; i < Width; i++) {
+                r += $"{matrix[i,j]}";
+            }
+            r += "\n";
+        }
+        int digitosLargura = (Width - 1).ToString().Length;
+        for (int digito = 0; digito < digitosLargura; digito++) {
+            r += "        ";
+            for (int x = 0; x < Width; x++) {
+                var xs = x.ToString();
+                r += xs.Length > digito ? $"{xs[digito]}" : "0";
+            }
+            r += "\n";
+        }
+        return r;
+    }
+
+    public String ToRichTextString() {
+        String r = "";
+        for(int j = Height - 1; j >= 0; j--) {
+            r += $"{j,6:000000}: ";
+            for (int i = 0; i < Width; i++) {
+                switch(matrix[i,j]) {
+                    case 'G':
+                        r += "[color=red]";
+                        break;
+                    default:
+                        r += "[color=cyan]";
+                        break;
+                }
+                r += $"{matrix[i,j]}";
+                r += "[/color]";
+            }
+            r += "\n";
+        }
+        int digitosLargura = 4;//(Width - 1).ToString().Length;
+        for (int digito = 0; digito < digitosLargura; digito++) {
+            r += "        ";
+            for (int x = 0; x < Width; x++) {
+                var xs = $"{x,4:0000}";
+                if (x == leftmostIndex) {
+                    r += "[color=blue]";
+                    r += xs[digito];
+                    r += "[/color]";
+                } else {
+                    r += "[color=lime]";
+                    r += xs[digito];
+                    r += "[/color]";
+                }
+            }
+            r += "\n";
+        }
+
+        int[] zeroBasedX = new int[width];
+        for (int x = LeftmostGlobalX; x <= RightmostGlobalX; x++) {
+            zeroBasedX[getLocalXIndexFromGlobalX(x)] = x;
+        }
+        digitosLargura = 4;//(RightmostGlobalX).ToString().Length;
+        for (int digito = 0; digito < digitosLargura; digito++) {
+            r += "        ";
+            for (int x = 0; x < zeroBasedX.Length; x++) {
+                var xs = $"{zeroBasedX[x],4:0000}";
+                if (zeroBasedX[x] < 0) {
+                    r += "[color=purple]";
+                    r += xs[digito+1];
+                    //r += xs.Length > digito ? $"{xs[digito]}" : "0";
+                    r += "[/color]";
+                } else {
+                    r += "[color=aqua]";
+                    r += xs[digito];
+                    // r += xs.Length > digito ? $"{xs[digito]}" : "0";
+                    r += "[/color]";
+                }
+                
+            }
+            r += "\n";
+        }
+
+        return r;
     }
 }

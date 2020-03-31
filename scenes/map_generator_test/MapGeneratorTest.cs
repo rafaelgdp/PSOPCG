@@ -4,6 +4,7 @@ public class MapGeneratorTest : Node2D
 {
     Player player;
     GeneratedTileMap tilemap;
+    RichTextLabel debugLabel;
 
     int generationToleranceOffset = 10;
     int renderToleranceOffset = 10;
@@ -11,13 +12,20 @@ public class MapGeneratorTest : Node2D
     public override void _Ready() {
         player = GetNode<Player>("Player");
         tilemap = GetNode<GeneratedTileMap>("GeneratedTileMap");
+        debugLabel = GetNode<RichTextLabel>("DebugUI/DebugLabel");
         generationToleranceOffset = tilemap.mMapGenerator.Width / 4; // 25% offset tolerance 
         renderToleranceOffset = tilemap.RenderChunkWidth / 4; // 25% offset tolerance 
     }
 
+    float lastDebugTime = 0F;
     public override void _PhysicsProcess(float delta) {
 
         CheckWorldUpdate();
+        lastDebugTime += delta;
+        if (lastDebugTime > 1F) {
+            lastDebugTime = 0F;
+            debugLabel.BbcodeText = tilemap.mMapGenerator.ToRichTextString();
+        }
 
     }
 
@@ -36,6 +44,12 @@ public class MapGeneratorTest : Node2D
             tilemap.UpdateWorldAroundX(mappedPlayerPosX);
         }
 
+    }
+
+    public override void _Input(InputEvent e) {
+        if (e.IsActionPressed("restart")) {
+            GetTree().ReloadCurrentScene();
+        }
     }
 
     private void OnPlayerExitedScreen() {
