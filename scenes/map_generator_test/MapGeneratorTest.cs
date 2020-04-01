@@ -13,8 +13,8 @@ public class MapGeneratorTest : Node2D
         player = GetNode<Player>("Player");
         tilemap = GetNode<GeneratedTileMap>("GeneratedTileMap");
         debugLabel = GetNode<RichTextLabel>("DebugUI/DebugLabel");
-        generationToleranceOffset = tilemap.mMapGenerator.Width / 4; // 25% offset tolerance 
-        renderToleranceOffset = tilemap.RenderChunkWidth / 4; // 25% offset tolerance 
+        generationToleranceOffset = Global.GeneticWidth / 4; // 25% offset tolerance 
+        renderToleranceOffset = Global.RenderWidth / 4; // 25% offset tolerance 
     }
 
     float lastDebugTime = 0F;

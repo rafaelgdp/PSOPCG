@@ -1,17 +1,27 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://scenes/player/Player.tscn" type="PackedScene" id=1]
 [ext_resource path="res://scenes/tilemap/environment_tileset.tres" type="TileSet" id=2]
 [ext_resource path="res://utils/GeneratedTileMap.cs" type="Script" id=3]
 [ext_resource path="res://scenes/map_generator_test/MapGeneratorTest.cs" type="Script" id=4]
+[ext_resource path="res://scenes/map_generator_test/ParametersUI.cs" type="Script" id=5]
 
-[sub_resource type="DynamicFontData" id=1]
+[sub_resource type="DynamicFontData" id=6]
 font_path = "res://assets/fonts/Source_Code_Pro/SourceCodePro-Regular.ttf"
 
-[sub_resource type="DynamicFont" id=2]
+[sub_resource type="DynamicFont" id=7]
 extra_spacing_top = -3
 extra_spacing_bottom = -3
-font_data = SubResource( 1 )
+font_data = SubResource( 6 )
+
+[sub_resource type="DynamicFontData" id=3]
+font_path = "res://assets/fonts/Source_Code_Pro/SourceCodePro-SemiBold.ttf"
+
+[sub_resource type="DynamicFont" id=4]
+font_data = SubResource( 3 )
+
+[sub_resource type="Theme" id=5]
+default_font = SubResource( 4 )
 
 [node name="MapGeneratorTest" type="Node2D"]
 script = ExtResource( 4 )
@@ -33,15 +43,129 @@ script = ExtResource( 3 )
 [node name="DebugUI" type="CanvasLayer" parent="."]
 
 [node name="DebugLabel" type="RichTextLabel" parent="DebugUI"]
+anchor_left = -0.000665903
+anchor_right = -0.000665665
 margin_left = 15.0
 margin_top = 10.0
 margin_right = 4482.0
 margin_bottom = 3075.0
-custom_fonts/normal_font = SubResource( 2 )
+custom_fonts/normal_font = SubResource( 7 )
 bbcode_enabled = true
 text = "Updating Debug Info...
 "
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="ParametersUI" type="VBoxContainer" parent="DebugUI"]
+anchor_left = 1.0
+anchor_right = 1.0
+margin_left = -355.0
+margin_top = 11.0
+margin_right = -13.0
+margin_bottom = 752.0
+theme = SubResource( 5 )
+script = ExtResource( 5 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="AuthorLabel" type="Label" parent="DebugUI/ParametersUI"]
+margin_right = 342.0
+margin_bottom = 2.0
+text = "Made by Rafael Guerra de Pontes"
+
+[node name="HSeparator" type="HSeparator" parent="DebugUI/ParametersUI"]
+margin_top = 6.0
+margin_right = 342.0
+margin_bottom = 10.0
+
+[node name="PopulationLabel" type="Label" parent="DebugUI/ParametersUI"]
+margin_top = 14.0
+margin_right = 342.0
+margin_bottom = 16.0
+text = "Population: "
+
+[node name="PopulationHSlider" type="HSlider" parent="DebugUI/ParametersUI"]
+margin_top = 20.0
+margin_right = 342.0
+margin_bottom = 36.0
+size_flags_horizontal = 3
+min_value = 5.0
+max_value = 100.0
+value = 5.0
+rounded = true
+ticks_on_borders = true
+
+[node name="HSeparator3" type="HSeparator" parent="DebugUI/ParametersUI"]
+margin_top = 40.0
+margin_right = 342.0
+margin_bottom = 44.0
+
+[node name="MutationRateLabel" type="Label" parent="DebugUI/ParametersUI"]
+margin_top = 48.0
+margin_right = 342.0
+margin_bottom = 50.0
+text = "Population: "
+
+[node name="MutationRateHSlider" type="HSlider" parent="DebugUI/ParametersUI"]
+margin_top = 54.0
+margin_right = 342.0
+margin_bottom = 70.0
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 0.05
+ticks_on_borders = true
+
+[node name="HSeparator2" type="HSeparator" parent="DebugUI/ParametersUI"]
+margin_top = 74.0
+margin_right = 342.0
+margin_bottom = 78.0
+
+[node name="GeneticWidthLabel" type="Label" parent="DebugUI/ParametersUI"]
+margin_top = 82.0
+margin_right = 342.0
+margin_bottom = 84.0
+text = "Render Width: "
+
+[node name="GeneticWidthHSlider" type="HSlider" parent="DebugUI/ParametersUI"]
+margin_top = 88.0
+margin_right = 342.0
+margin_bottom = 104.0
+size_flags_horizontal = 3
+min_value = 10.0
+max_value = 100.0
+value = 10.0
+rounded = true
+ticks_on_borders = true
+
+[node name="HSeparator4" type="HSeparator" parent="DebugUI/ParametersUI"]
+margin_top = 108.0
+margin_right = 342.0
+margin_bottom = 112.0
+
+[node name="MaxIterationsLabel" type="Label" parent="DebugUI/ParametersUI"]
+margin_top = 116.0
+margin_right = 342.0
+margin_bottom = 118.0
+text = "Max Iterations:  "
+
+[node name="MaxIterationsHSlider" type="HSlider" parent="DebugUI/ParametersUI"]
+margin_top = 122.0
+margin_right = 342.0
+margin_bottom = 138.0
+size_flags_horizontal = 3
+min_value = 10.0
+max_value = 100.0
+value = 10.0
+rounded = true
+ticks_on_borders = true
+
+[node name="SetParamsButton" type="Button" parent="DebugUI/ParametersUI"]
+margin_top = 142.0
+margin_right = 342.0
+margin_bottom = 150.0
+text = "Reset with Params"
 [connection signal="PlayerExitedScreen" from="Player" to="." method="OnPlayerExitedScreen"]
+[connection signal="pressed" from="DebugUI/ParametersUI/SetParamsButton" to="DebugUI/ParametersUI" method="OnSetParams"]

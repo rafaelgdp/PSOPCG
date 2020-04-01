@@ -5,7 +5,7 @@ public class GeneratedTileMap : TileMap
 {
     [Export]
     private int cellSize = 64;
-    public GAMapGenerator mMapGenerator = new GAMapGenerator(50, 12, 10, 30, 0.05F);
+    public GAMapGenerator mMapGenerator = new GAMapGenerator(Global.GeneticWidth, 12, 6, Global.Population, Global.MutationRate);
     // public MapGenerator mMapGenerator = new MapGenerator(100, 12, 10);
 
     Dictionary<char, int> tileDictionary = new Dictionary<char, int>() { 
@@ -17,7 +17,7 @@ public class GeneratedTileMap : TileMap
     public int RenderChunkWidth { get { return renderChunkWidth; } }
     public int LeftmostGlobalX { get { return leftChunkLimit; }}
     public int RightmostGlobalX { get { return rightChunkLimit; }}
-    private int renderChunkWidth = 20;
+    private int renderChunkWidth = Global.RenderWidth;
     private int leftChunkLimit = 0;
     private int rightChunkLimit { get { return leftChunkLimit + renderChunkWidth; } }
     public override void _Ready() {

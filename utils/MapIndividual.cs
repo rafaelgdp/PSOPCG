@@ -68,10 +68,11 @@ public class MapIndividual {
                 holeLength = 0;
             }
             var gh = groundHeightAtX(x);
-            if (Mathf.Abs(previousGroundHeight - gh) > jumpLimit) {
-                groundFitness -= 100;
+            var ghDiff = Mathf.Abs(previousGroundHeight - gh);
+            if (ghDiff > jumpLimit) {
+                groundFitness -= 50 * ghDiff;
             } else {
-                groundFitness += 1;
+                groundFitness += 10;
             }
             previousGroundHeight = gh;
         }
@@ -169,18 +170,16 @@ public class MapIndividual {
     Random random = new Random();
     private void mutateGroundHeightAtX(int x)
     {   
-        var changeAbs = random.Next(1, 2);
-        var changeDirection = random.Next(1) == 1 ? 1 : -1;
+        var changeAbs = random.Next(1,3);
+        var changeDirection = random.Next(2) == 1 ? 1 : -1;
         var gh = groundHeightAtX(x);
         var shift = changeDirection * changeAbs;
+        var newHeight = gh + shift;
         for (var y = 0; y < GeneticHeight; y++) {
-            var newY = y - shift;
-            if (newY >= GeneticHeight) {
-                geneMatrix[x,y] = 'B';
-            } else if (newY < 0) {
-                    geneMatrix[x,y] = 'G';
+            if (y < newHeight) {
+                geneMatrix[x,y] = 'G';
             } else {
-                geneMatrix[x,y] = geneMatrix[x,newY];
+                geneMatrix[x,y] = 'B';
             }
         }    
     }

@@ -4,7 +4,7 @@ using System;
 public class GAMapGenerator : MapGenerator {
     private List<MapIndividual> population;
     private int populationSize;
-    private int maxIterations = 10;
+    private int maxIterations = Global.MaxIterations;
     private float mutationRate = 0.05F;
     private float elitism = 0.05F;
     private MapIndividual BestIndividual { get {
@@ -24,6 +24,7 @@ public class GAMapGenerator : MapGenerator {
     base(width, height, center) {
         this.populationSize = populationSize;
         this.mutationRate = mutationRate;
+        this.maxIterations = Global.MaxIterations;
         createPopulation();
         RegenerateChunkCenteredAt(CenterGlobalX);
     }
@@ -37,6 +38,9 @@ public class GAMapGenerator : MapGenerator {
     }
 
     private void initializePopulation(int generationLeft, int generationRight) {
+        if (population.Count == 0) {
+            createPopulation();
+        }
         var zm = getZeroIndexedMatrix();
         var zgl = getLocalXIndexInZeroMatrixFromGlobalX(generationLeft);
         var zgr = getLocalXIndexInZeroMatrixFromGlobalX(generationRight);
