@@ -10,7 +10,7 @@ public class Global : Node
     public static int RenderWidth {
         get { return renderWidth; }
         set {
-            geneticWidth = value * 3;
+            geneticWidth = value * 2;
             renderWidth = value;
         }
     }
@@ -19,7 +19,7 @@ public class Global : Node
         get { return geneticWidth; }
         set {
             geneticWidth = value;
-            renderWidth = value / 3;
+            renderWidth = value / 2;
         }
     }
 

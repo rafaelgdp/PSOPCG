@@ -31,6 +31,7 @@ public class ParametersUI : VBoxContainer
         populationSlider.Value = Global.Population;
         geneticWidthSlider.Value = Global.GeneticWidth;
         mutationRateSlider.Value = Global.MutationRate;
+        maxIterationsSlider.Value = Global.MaxIterations;
 
     }
 
@@ -38,12 +39,14 @@ public class ParametersUI : VBoxContainer
         populationLabel.Text = $"Population: {(int)populationSlider.Value}";
         geneticWidthLabel.Text = $"Genetic Width: {(int)geneticWidthSlider.Value}";
         mutationRateLabel.Text = $"Mutation Rate: {(float)mutationRateSlider.Value}";
+        maxIterationsLabel.Text = $"Max Iterations: {(int)maxIterationsSlider.Value}";
     }
 
     private void OnSetParams() {
         Global.Population = (int) populationSlider.Value;
         Global.MutationRate = (float) mutationRateSlider.Value;
         Global.GeneticWidth = (int) geneticWidthSlider.Value;
+        Global.MaxIterations = (int) maxIterationsSlider.Value;
         GetTree().ReloadCurrentScene();
     }
 
