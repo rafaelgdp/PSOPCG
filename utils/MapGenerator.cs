@@ -31,7 +31,8 @@ public class MapGenerator {
     protected int leftmostGlobalX;
     public int LeftmostGlobalX { get { return leftmostGlobalX; } }
     protected int leftmostIndex = 0;
-    public int RightmostGlobalX { get { return leftmostGlobalX + width; }}
+    public int RightmostGlobalX { get { return leftmostGlobalX + width - 1; }}
+    public int CenterGlobalX { get { return LeftmostGlobalX + (Width / 2); }}
     protected char[,] matrix;
     protected Random random = new Random();
     protected int floorZeroHeight = 3;
@@ -39,17 +40,18 @@ public class MapGenerator {
         this.width = width;
         this.height = height;
         this.leftmostIndex = 0;
-        this.matrix = new char[width + 2, height]; // +2 is workaround for corner cases
+        this.matrix = new char[width, height]; // +2 is workaround for corner cases
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 this.matrix[i, j] = 'B';
             }
         }
-        initializeMap();
+        initializeMap(globalOriginX);
     }
 
-    protected void initializeMap() {
-        for (int i = LeftmostGlobalX; i < RightmostGlobalX; i++) {
+    protected void initializeMap(int x) {
+        leftmostGlobalX = x - (Width / 2);
+        for (int i = LeftmostGlobalX; i <= RightmostGlobalX; i++) {
             for (int j = 0; j < floorZeroHeight; j++) {
                 SetGlobalCell(i, j, 'G');
             }
@@ -85,7 +87,7 @@ public class MapGenerator {
             RegenerateChunkCenteredAt(x);
         }
 
-        int localX = (leftmostIndex + x - LeftmostGlobalX) % width;
+        int localX = (leftmostIndex + x - LeftmostGlobalX) % Width;
         int localY = y;
         var oldValue = matrix[localX, localY];
         matrix[localX, localY] = newValue;
@@ -96,7 +98,7 @@ public class MapGenerator {
     {
         // New limits
         int newLeftmostGlobalX = newCenterOriginX - (width / 2);
-        int newRightmostGlobalX = newLeftmostGlobalX + width;
+        int newRightmostGlobalX = newLeftmostGlobalX + width - 1;
 
         // Find intersection
         if (newRightmostGlobalX < LeftmostGlobalX || newLeftmostGlobalX > RightmostGlobalX) {
@@ -104,7 +106,7 @@ public class MapGenerator {
             leftmostGlobalX = newLeftmostGlobalX;
             leftmostIndex = 0;
             generateMap(newLeftmostGlobalX, newRightmostGlobalX);
-        } else {
+        } else if (newLeftmostGlobalX != LeftmostGlobalX) {
             // There is partial intersection
             // Regenerate new needed area
             int intersectionLeftLimit = Mathf.Max(newLeftmostGlobalX, LeftmostGlobalX);
@@ -112,22 +114,24 @@ public class MapGenerator {
 
             int generationLeftLimit;
             int generationRightLimit;
+
             if (newLeftmostGlobalX < LeftmostGlobalX) {
+                // Generate lefthand chunk
                 generationLeftLimit = newLeftmostGlobalX;
-                generationRightLimit = LeftmostGlobalX - 1;
+                generationRightLimit = intersectionLeftLimit - 1;
             } else {
-                generationLeftLimit = RightmostGlobalX + 1;
+                // Generate righthand chunk
+                generationLeftLimit = intersectionRightLimit + 1;
                 generationRightLimit = newRightmostGlobalX;
             }
 
             var newLeftmostIndex = getLocalXIndexFromGlobalX(newLeftmostGlobalX);
             if (newLeftmostIndex == -1) {
                 var intersectionWidth = intersectionRightLimit - intersectionLeftLimit;
-                newLeftmostIndex = (leftmostIndex + intersectionWidth + 1) % width;
+                newLeftmostIndex = (leftmostIndex + intersectionWidth + 1) % Width;
             }
             leftmostGlobalX = newLeftmostGlobalX;
             leftmostIndex = newLeftmostIndex;
-            // var isNewChunkOnLeft = newLeftmostIndex < intersectionLeftLimit;
             generateMap(generationLeftLimit, generationRightLimit);
         }
     }
@@ -138,14 +142,20 @@ public class MapGenerator {
     */
     protected int getLocalXIndexFromGlobalX(int globalX) {
         if (globalX < LeftmostGlobalX || globalX > RightmostGlobalX) return -1;
-        return (globalX - LeftmostGlobalX + leftmostIndex - 1) % width;
+        return (globalX - LeftmostGlobalX + leftmostIndex) % width;
     }
     protected virtual void generateMap(int generatedLeftmostX, int generatedRightmostX) {
 
-        for (int i = generatedLeftmostX; i < generatedRightmostX; i++) {
-            for (int j = 0; j < floorZeroHeight; j++) {
+        var floorHeight = generatedLeftmostX;
+        for (int i = generatedLeftmostX; i <= generatedRightmostX; i++) {
+            floorHeight %= (Height - 7);
+            for (int j = 0; j < floorHeight + 1; j++) {
                 SetGlobalCell(i, j, 'N');
             }
+            for (int j = floorHeight + 1; j < Height; j++) {
+                SetGlobalCell(i, j, 'B');
+            }
+            floorHeight++;
         }
     }
 
@@ -172,12 +182,17 @@ public class MapGenerator {
 
     public String ToRichTextString() {
         String r = "";
+
+        // Actual tiles
         for(int j = Height - 1; j >= 0; j--) {
             r += $"{j,6:000000}: ";
             for (int i = 0; i < Width; i++) {
                 switch(matrix[i,j]) {
                     case 'G':
                         r += "[color=red]";
+                        break;
+                    case 'N':
+                        r += "[color=purple]";
                         break;
                     default:
                         r += "[color=cyan]";
@@ -188,13 +203,21 @@ public class MapGenerator {
             }
             r += "\n";
         }
-        int digitosLargura = 4;//(Width - 1).ToString().Length;
+
+        // Global X coordinates
+        int digitosLargura = 4;
         for (int digito = 0; digito < digitosLargura; digito++) {
             r += "        ";
             for (int x = 0; x < Width; x++) {
                 var xs = $"{x,4:0000}";
                 if (x == leftmostIndex) {
+                    // LeftmostX offset in matrix
                     r += "[color=blue]";
+                    r += xs[digito];
+                    r += "[/color]";
+                } else if (x == ((leftmostIndex + (Width/2) - 1) % Width)) {
+                    // Middle X
+                    r += "[color=fuchsia]";
                     r += xs[digito];
                     r += "[/color]";
                 } else {
@@ -206,11 +229,13 @@ public class MapGenerator {
             r += "\n";
         }
 
-        int[] zeroBasedX = new int[width];
+        // Zero-based indices
+        int[] zeroBasedX = new int[Width];
         for (int x = LeftmostGlobalX; x <= RightmostGlobalX; x++) {
-            zeroBasedX[getLocalXIndexFromGlobalX(x)] = x;
+            var i = getLocalXIndexFromGlobalX(x);
+            zeroBasedX[i] = x;
         }
-        digitosLargura = 4;//(RightmostGlobalX).ToString().Length;
+        digitosLargura = 4;
         for (int digito = 0; digito < digitosLargura; digito++) {
             r += "        ";
             for (int x = 0; x < zeroBasedX.Length; x++) {
@@ -218,12 +243,10 @@ public class MapGenerator {
                 if (zeroBasedX[x] < 0) {
                     r += "[color=purple]";
                     r += xs[digito+1];
-                    //r += xs.Length > digito ? $"{xs[digito]}" : "0";
                     r += "[/color]";
                 } else {
                     r += "[color=aqua]";
                     r += xs[digito];
-                    // r += xs.Length > digito ? $"{xs[digito]}" : "0";
                     r += "[/color]";
                 }
                 

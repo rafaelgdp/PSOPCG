@@ -29,9 +29,9 @@ public class MapIndividual {
         updateMutabilityIndices(0, GeneticWidth - 1);
     }
 
-    public MapIndividual(char[,] geneMatrix, int ili, int iri) {
+    public MapIndividual(char[,] geneMatrix, int gl = -1, int gr = -1) {
         this.geneMatrix = (char[,]) geneMatrix.Clone();
-        updateMutabilityIndices(ili, iri);
+        updateMutabilityIndices(gl, gr);
     }
 
     public int GetFitness() {
@@ -53,10 +53,20 @@ public class MapIndividual {
     }
 
     int jumpLimit = 2;
+    int maxJumpableHole = 4;
     private int getGroundFitness() {
         int groundFitness = 0;
         int previousGroundHeight = groundHeightAtX(0);
+        int holeLength = 0;
         for (int x = 1; x < GeneticWidth; x++) {
+            if (previousGroundHeight == 0) {
+                holeLength++;
+                if (holeLength > maxJumpableHole) {
+                    groundFitness -= 100;
+                }
+            } else {
+                holeLength = 0;
+            }
             var gh = groundHeightAtX(x);
             if (Mathf.Abs(previousGroundHeight - gh) > jumpLimit) {
                 groundFitness -= 100;
@@ -78,9 +88,12 @@ public class MapIndividual {
         return groundHeight;
     }
 
-    public void UpdateGeneticMatrix(char[,] zeroGM, int ili, int iri) {
+    public void UpdateGeneticMatrix(char[,] zeroGM, int gl, int gr) {
         isFitnessUpdated = false;
-        updateMutabilityIndices(ili, iri);
+        // Immutable left and right limits:
+        int ili = gl == 0 ? gr + 1 : 0;
+        int iri = gr == GeneticWidth - 1 ? gl - 1 : GeneticWidth - 1;
+        updateMutabilityIndices(gl, gr, ili, iri);
         for (int x = ili; x <= iri; x++) {
             for (int y = 0; y < GeneticHeight; y++) {
                 geneMatrix[x, y] = zeroGM[x, y];
@@ -88,18 +101,33 @@ public class MapIndividual {
         }
     }
 
-    private void updateMutabilityIndices(int ili, int iri)
+    private void updateMutabilityIndices(int gl, int gr)
     {
+        this.mutableLeftIndex = gl;
+        this.mutableRightIndex = gr;
+        if (gl < 0 || gr < 0) {
+            this.immutableLeftIndex = 0;
+            this.immutableRightIndex = geneMatrix.Length - 1;
+        } else {
+            int ili = gl == 0 ? gr + 1 : 0;
+            int iri = gr == geneMatrix.Length - 1 ? gl - 1 : geneMatrix.Length - 1;
+            this.immutableLeftIndex = ili;
+            this.immutableRightIndex = iri;
+        }
+    }
+
+    private void updateMutabilityIndices(int gl, int gr, int ili, int iri)
+    {
+        this.mutableLeftIndex = gl;
+        this.mutableRightIndex = gr;
         this.immutableLeftIndex = ili;
         this.immutableRightIndex = iri;
-        this.mutableLeftIndex = ili == 0 ? iri + 1 : 0;
-        this.mutableRightIndex = iri == GeneticWidth - 1 ? ili - 1 : GeneticWidth - 1;
     }
 
     internal char[,] CrossoverWith(MapIndividual parent2)
     {
         Random random = new Random();
-        int mutableXRange = mutableRightIndex - mutableLeftIndex;
+        int mutableXRange = mutableRightIndex - mutableLeftIndex + 1;
         int leftPoint = mutableLeftIndex + mutableXRange / 4;
         int rightPoint = mutableRightIndex - mutableXRange / 4;
         int crossoverXPoint = random.Next(leftPoint, rightPoint);

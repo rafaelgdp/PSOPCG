@@ -70,7 +70,6 @@ public class Player : KinematicBody2D
         if (IsOnFloor()) {
             snapVector = Vector2.Zero;
             if (Input.IsActionJustPressed("jump")) {
-                GD.Print("Here?");
                 motion.y = jumpForce;
             }
         } else {

@@ -3,6 +3,7 @@ using System;
 
 public class GAMapGenerator : MapGenerator {
     private List<MapIndividual> population;
+    private int populationSize;
     private int maxIterations = 10;
     private float mutationRate = 0.05F;
     private float elitism = 0.05F;
@@ -21,23 +22,31 @@ public class GAMapGenerator : MapGenerator {
 
     public GAMapGenerator(int width, int height, int center, int populationSize = 100, float mutationRate = 0.05F) :
     base(width, height, center) {
+        this.populationSize = populationSize;
+        this.mutationRate = mutationRate;
+        createPopulation();
+        RegenerateChunkCenteredAt(CenterGlobalX);
+    }
+
+    private void createPopulation() {
         population = new List<MapIndividual>(populationSize);
         var zeroIndexedMatrix = getZeroIndexedMatrix();
         for (int i = 0; i < populationSize; i++) {
             population.Add(new MapIndividual(matrix));
         }
-        this.mutationRate = mutationRate;
     }
 
-    private void initializePopulation(int ili, int iri) {
+    private void initializePopulation(int generationLeft, int generationRight) {
         var zm = getZeroIndexedMatrix();
+        var zgl = getLocalXIndexInZeroMatrixFromGlobalX(generationLeft);
+        var zgr = getLocalXIndexInZeroMatrixFromGlobalX(generationRight);
         foreach (MapIndividual individual in population) {
-            individual.UpdateGeneticMatrix(zm, ili, iri);
+            individual.UpdateGeneticMatrix(zm, zgl, zgr);
         }
     }
 
     private char[,] getZeroIndexedMatrix() {
-        char[,] zm = new char[width + 2, height];
+        char[,] zm = new char[width, height];
         int zx = 0;
         for (int x = LeftmostGlobalX; x <= RightmostGlobalX; x++) {
             for (int y = 0; y < height; y++) {
@@ -49,23 +58,27 @@ public class GAMapGenerator : MapGenerator {
     }
 
     private int getLocalXIndexInZeroMatrixFromGlobalX(int globalX) {
-        return getLocalXIndexFromGlobalX(globalX) - leftmostIndex;
+        var lxfg = getLocalXIndexFromGlobalX(globalX);
+        if (lxfg < leftmostIndex) {
+            return Width - leftmostIndex + getLocalXIndexFromGlobalX(globalX);
+        } else {
+            return getLocalXIndexFromGlobalX(globalX) - leftmostIndex;
+        }
     }
     protected override void generateMap(int generationGlobalLeftmostX, int generationGlobalRightmostX) {
         
-        // Immutable left and right limits:
-        int ili = generationGlobalLeftmostX > LeftmostGlobalX ? 0 : (LeftmostGlobalX - generationGlobalLeftmostX + 1);
-        int iri = generationGlobalRightmostX < RightmostGlobalX ? Width - 1 : (generationGlobalLeftmostX - LeftmostGlobalX - 1);
-        
-        initializePopulation(ili, iri);
+        initializePopulation(generationGlobalLeftmostX, generationGlobalRightmostX);
         
         // Evolve over generations
         int numberOfChildren = (int) ((1 - elitism) * (float) population.Count);
         MapIndividual[] children = new MapIndividual[numberOfChildren];
+
+        var zgl = getLocalXIndexInZeroMatrixFromGlobalX(generationGlobalLeftmostX);
+        var zgr = getLocalXIndexInZeroMatrixFromGlobalX(generationGlobalRightmostX);
+
         for (int i = 0; i < maxIterations; i++) {
             // Sort population
             population.Sort((x, y) => x.Fitness.CompareTo(y.Fitness));
-            // population.Sort(comparison: MapIndividualComparer);
             
             // Crossover
             for (int ci = 0; ci < numberOfChildren; ci++) {
@@ -74,7 +87,7 @@ public class GAMapGenerator : MapGenerator {
                 var parent2 = pickParent();
                 // Crossover parents
                 char[,] childGenes = crossover(parent1, parent2);
-                MapIndividual newChild = new MapIndividual(childGenes, ili, iri);
+                MapIndividual newChild = new MapIndividual(childGenes, zgl, zgr);
                 children[ci] = newChild;
             }
 
@@ -92,15 +105,6 @@ public class GAMapGenerator : MapGenerator {
             zx++;
         }
     }
-
-    // private int MapIndividualComparer(MapIndividual x, MapIndividual y)
-    // {
-    //     var xf = x.GetFitness();
-    //     var yf = y.GetFitness();
-    //     if (xf < yf) return -1;
-    //     if (xf > yf) return 1;
-    //     return 0;
-    // }
 
     private void mutatePopulation() {
         foreach (var individual in population) {
