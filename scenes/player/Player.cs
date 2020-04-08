@@ -24,10 +24,16 @@ public class Player : KinematicBody2D
     Vector2 defaultSnapVector = Vector2.Down * 4f;
     Vector2 snapVector = Vector2.Zero;
     Vector2 motion = Vector2.Zero;
+
+    private bool isFalling { get { return motion.y > 0; } }
     
     public Vector2 Speed { 
             get => motion;
         }
+
+    // Debug
+    [Export]
+    public bool FallingEnabled = true;
 
     // Child Nodes
     Node2D flipNodes;
@@ -76,11 +82,19 @@ public class Player : KinematicBody2D
             snapVector = Vector2.Down * 1F;
         }
 
+        if (Input.IsActionJustReleased("jump") && !isFalling) {
+            motion.y /= 4;
+        }
+
         if (Mathf.Abs(horizontalMotion) < 0.2) { // no horizontal movement pressed
             // Apply friction
             motion.x += -Mathf.Sign(motion.x) * Global.Friction * delta;
             if (Mathf.Abs(motion.x) < minSpeed)
                 motion.x = 0F;
+        }
+
+        if (FallingEnabled == false) {
+            motion.y = (Input.GetActionStrength("ui_down") - Input.GetActionStrength("ui_up")) * maxSpeed;
         }
 
     }

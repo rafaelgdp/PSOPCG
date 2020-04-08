@@ -4,7 +4,7 @@ using System;
 public class Global : Node
 {
     public static float Gravity = 1000F;
-    public static float Friction = 650F;
+    public static float Friction = 1000F;
     public static int Population = 30;
     private static int renderWidth = 20;
     public static int RenderWidth {
