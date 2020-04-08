@@ -189,6 +189,9 @@ public class MapGenerator {
             for (int i = 0; i < Width; i++) {
                 switch(matrix[i,j]) {
                     case 'G':
+                        r += "[color=gray]";
+                        break;
+                    case 'S':
                         r += "[color=red]";
                         break;
                     case 'N':
@@ -249,7 +252,6 @@ public class MapGenerator {
                     r += xs[digito];
                     r += "[/color]";
                 }
-                
             }
             r += "\n";
         }

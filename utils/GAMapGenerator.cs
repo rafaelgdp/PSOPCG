@@ -101,6 +101,10 @@ public class GAMapGenerator : MapGenerator {
 
         // Update world matrix with best individual
         var bestIndividual = BestIndividual;
+
+        // Force playability of individual
+        bestIndividual.forcePlayability();
+
         int zx = 0;
         for (int i = LeftmostGlobalX; i < RightmostGlobalX; i++) {
             for (int j = 0; j < Height; j++) {

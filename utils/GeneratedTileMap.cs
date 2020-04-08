@@ -11,7 +11,8 @@ public class GeneratedTileMap : TileMap
     Dictionary<char, int> tileDictionary = new Dictionary<char, int>() { 
         {'B', -1},
         {'G', 0},
-        {'N', 1}
+        {'N', 1},
+        {'S', 2}
     };
 
     public int RenderChunkWidth { get { return renderChunkWidth; } }

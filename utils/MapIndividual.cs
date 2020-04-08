@@ -47,9 +47,32 @@ public class MapIndividual {
         return fitness;
     }
 
-    int maxSpikeDistance = 2;
+    static int maxSpikeDistance = 4;
+    static int spikePenalty = 20;
     private int getSpikeFitness() {
-        return 0;
+        int spikeFitness = 0;
+        bool hadSpike = false;
+        int spikeLength = 0;
+        int previousIndex = 0;
+        for (int x = 0; x < GeneticWidth; x++) {
+            bool hasSpike = hasSpikeAtX(x);
+            if (hasSpike) {
+                var obsDiff = obstacleHeightAtX(x) - obstacleHeightAtX(previousIndex);
+                spikeLength += 1 + Mathf.Abs(obsDiff);
+                hadSpike = true;
+            } else if (hadSpike) {
+                // Compute fitness penalty
+                if (spikeLength > maxSpikeDistance) {
+                    spikeFitness -= spikeLength * spikePenalty;
+                }
+                spikeLength = 0;
+            }
+            previousIndex = x;
+        }
+        if (spikeLength > maxSpikeDistance) {
+            spikeFitness -= spikeLength * spikePenalty;
+        }
+        return spikeFitness;
     }
 
     int jumpLimit = 2;
@@ -87,6 +110,21 @@ public class MapIndividual {
             groundHeight++;
         }
         return groundHeight;
+    }
+
+    private bool hasSpikeAtX(int x) {
+        int y = groundHeightAtX(x);
+        if (y >= GeneticHeight) return false;
+        return geneMatrix[x, y] == 'S';
+    }
+
+    private int obstacleHeightAtX(int x) {
+        int extraBlock = hasSpikeAtX(x) ? 1 : 0;
+        return groundHeightAtX(x) + extraBlock;
+    }
+
+    private bool hasAHoleAtX(int x) {
+        return groundHeightAtX(x) == 0;
     }
 
     public void UpdateGeneticMatrix(char[,] zeroGM, int gl, int gr) {
@@ -163,10 +201,36 @@ public class MapIndividual {
         Random r = new Random();
         for (int x = mutableLeftIndex; x <= mutableRightIndex; x++) {
             if (r.NextDouble() < mutationRate) {
+                // Ground mutation
                 mutateGroundHeightAtX(x);
+            }
+            if (r.NextDouble() < mutationRate) {
+                // Spike mutation
+                mutateSpikeAtX(x);
             }
         }
     }
+
+    private void mutateSpikeAtX(int x)
+    {
+        int y = groundHeightAtX(x);
+        if (y >= GeneticHeight) return;
+        switch (geneMatrix[x, y]) {
+            case 'B':
+                geneMatrix[x, y] = 'S';
+                break;
+            case 'S':
+                geneMatrix[x, y] = 'B';
+                break;
+            case 'C':
+                geneMatrix[x, y] = 'S';
+                if (y + 1 < GeneticHeight)
+                    geneMatrix[x, y + 1] = 'C';
+                break;
+        }
+
+    }
+
     Random random = new Random();
     private void mutateGroundHeightAtX(int x)
     {   
@@ -175,12 +239,107 @@ public class MapIndividual {
         var gh = groundHeightAtX(x);
         var shift = changeDirection * changeAbs;
         var newHeight = gh + shift;
-        for (var y = 0; y < GeneticHeight; y++) {
-            if (y < newHeight) {
-                geneMatrix[x,y] = 'G';
-            } else {
-                geneMatrix[x,y] = 'B';
+        shiftYAtX(x, shift);    
+    }
+
+    private void shiftYAtX(int x, int shift) {
+        if (shift > 0) {
+            for (var y = GeneticHeight - 1; y >= 0; y--) {
+                var shiftedY = y - shift;
+                if (shiftedY >= 0)
+                    geneMatrix[x, y] = geneMatrix[x, shiftedY];
+                else
+                    geneMatrix[x, y] = 'G';
             }
-        }    
+        } else if (shift < 0) {
+            for (var y = 0; y < GeneticHeight; y++) {
+                var shiftedY = y - shift;
+                if (shiftedY < GeneticHeight)
+                    geneMatrix[x, y] = geneMatrix[x, shiftedY];
+                else
+                    geneMatrix[x, y] = 'B';
+            }
+        }
+    }
+
+    /*
+        This method guarantees that the genetic code renders a playable map.
+        The idea is to inspect each consecutive x coordinate starting from 
+        the x in the mutable area that touches the immutable area towards 
+        the other end of the mutable area. Verifications being made:
+            - are consecutive x heights jumpable?
+            - are consecutive spikes jumpable?
+            - are holes jumpable?
+    */
+    public void forcePlayability() {
+        int checkDirection = 1; // 1 to right, -1 to left
+        int mutableLength = mutableRightIndex - mutableLeftIndex;
+        bool partialMutation = mutableLength != GeneticWidth;
+        if (partialMutation && mutableLeftIndex == 0) // It's from right to left
+            checkDirection = -1;
+        int start = checkDirection == 1 ? mutableLeftIndex : mutableRightIndex;
+        int previousIndex = partialMutation ? start - checkDirection : start;
+        var previousObstacleHeight = obstacleHeightAtX(previousIndex);
+        int previousGroundIndex = -1; // No clear x found
+        int previousGroundHeight = -1;
+        if (!hasEnemyAtX(previousIndex))
+            previousGroundIndex = previousIndex;
+        else if (!hasEnemyAtX(start)) previousGroundIndex = start;
+        if (previousGroundIndex != -1) previousGroundHeight = groundHeightAtX(previousGroundIndex);
+        bool hadSpike = hasSpikeAtX(start);
+        int spikeLength = 0;
+        for (var x = start; x <= mutableRightIndex && x >= mutableLeftIndex; x += checkDirection) {
+
+            // Check for unreacheable height diffs
+            var currentObstacleHeight = obstacleHeightAtX(x);
+            var obstacleDiff = currentObstacleHeight - previousObstacleHeight;
+            if (Mathf.Abs(obstacleDiff) > jumpLimit) {
+                shiftYAtX(x, -obstacleDiff + Mathf.Sign(obstacleDiff));
+                currentObstacleHeight = obstacleHeightAtX(x); // Update height
+            }
+
+            if (previousGroundHeight != -1) {
+                var previousGroundDistance = Mathf.Abs(previousGroundIndex - x); // Horizontal dist.
+                previousGroundDistance += Mathf.Abs(currentObstacleHeight - previousGroundHeight); // Approx. vertical dist.
+
+                if (previousGroundDistance > jumpLimit) {
+                    shiftYAtX(x, -(currentObstacleHeight - previousGroundHeight));
+                    currentObstacleHeight = obstacleHeightAtX(x); // Update height
+                }
+            }
+
+            // Check for lengthy spikes
+            bool hasSpike = hasSpikeAtX(x);
+            if (hasSpike) {
+                var obsDiff = obstacleHeightAtX(x) - previousObstacleHeight;
+                spikeLength += 1 + obsDiff;
+                hadSpike = true;
+                if (spikeLength > maxSpikeDistance) {
+                    mutateSpikeAtX(x); // This toggles spike here
+                }
+            } else {
+                if (spikeLength > maxSpikeDistance || hasAHoleAtX(x)) {
+                    if (hadSpike) {
+                        mutateSpikeAtX(previousIndex); // This toggles spike here
+                    }
+                }
+                spikeLength = 0;
+            }
+
+            // Updates for next iteration
+            previousObstacleHeight = obstacleHeightAtX(x);
+            hadSpike = hasSpikeAtX(x);
+            previousIndex = x;
+
+            if (!hasEnemyAtX(x)) {
+                previousGroundIndex = x;
+                previousGroundHeight = groundHeightAtX(x);
+            }
+
+        }
+    }
+
+    private bool hasEnemyAtX(int x) {
+        return hasSpikeAtX(x); // || hasCrazyEnemyAtX...
     }
 }
