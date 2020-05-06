@@ -208,6 +208,19 @@ public class MapIndividual {
                 // Spike mutation
                 mutateSpikeAtX(x);
             }
+            if (r.NextDouble() < mutationRate) {
+                // Spike mutation
+                mutateClockAtX(x);
+            }
+        }
+    }
+
+    private void mutateClockAtX(int x)
+    {
+        int y = groundHeightAtX(x);
+        if (hasSpikeAtX(x)) y++;
+        if (y < GeneticHeight) {
+            geneMatrix[x, y] = geneMatrix[x, y] == 'B' ? 'C' : 'B';
         }
     }
 

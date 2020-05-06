@@ -26,6 +26,8 @@ public class Global : Node
     public static int MaxIterations = 10;
     public static float MutationRate = 0.05F;
 
+    public static MapGeneratorTest MainScene;
+
     public override void _Input(InputEvent @event) {
         if (@event.IsActionPressed("quit")) {
             GetTree().Quit();

@@ -20,7 +20,8 @@ public class MapGenerator {
         'G', // Ground
         'I', // Item
         'S', // Spike
-        'E', // Enemy
+        'E', // Enemy,
+        'C', // ClockItem
     };
 
     public char DefaultCell { get { return TileCodes[0]; } } // Blank
@@ -196,6 +197,9 @@ public class MapGenerator {
                         break;
                     case 'N':
                         r += "[color=purple]";
+                        break;
+                    case 'C':
+                        r += "[color=yellow]";
                         break;
                     default:
                         r += "[color=cyan]";

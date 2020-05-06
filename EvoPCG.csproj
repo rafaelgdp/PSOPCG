@@ -59,6 +59,8 @@
     <Compile Include="scenes\map_generator_test\MapGeneratorTest.cs" />
     <Compile Include="scenes\map_generator_test\ParametersUI.cs" />
     <Compile Include="scenes\player\Player.cs" />
+    <Compile Include="scenes\powerups\ClockItem.cs" />
+    <Compile Include="scenes\ui\TimeLeftRTL.cs" />
     <Compile Include="utils\GeneratedTileMap.cs" />
     <Compile Include="utils\MapGenerator.cs" />
     <Compile Include="utils\GAMapGenerator.cs" />

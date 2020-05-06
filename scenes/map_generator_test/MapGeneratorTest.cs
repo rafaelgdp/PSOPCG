@@ -2,14 +2,32 @@ using Godot;
 
 public class MapGeneratorTest : Node2D
 {
+    [Signal]
+    public delegate void TimeLeftUpdated(float timeLeft);
+
     Player player;
     GeneratedTileMap tilemap;
     RichTextLabel debugLabel;
 
     int generationToleranceOffset = 10;
     int renderToleranceOffset = 10;
+    private static float timeLeft = 30F;
+
+    public float TimeLeft {
+        set {
+            timeLeft = Mathf.Max(0F, value);
+            EmitSignal("TimeLeftUpdated", timeLeft);
+            if (timeLeft <= 0F) {
+                GetTree().ReloadCurrentScene();
+            }
+        }
+    
+        get { return timeLeft; }
+    }
 
     public override void _Ready() {
+        Global.MainScene = this;
+        TimeLeft = 25F;
         player = GetNode<Player>("Player");
         tilemap = GetNode<GeneratedTileMap>("GeneratedTileMap");
         debugLabel = GetNode<RichTextLabel>("DebugUI/DebugLabel");
@@ -26,6 +44,8 @@ public class MapGeneratorTest : Node2D
             lastDebugTime = 0F;
             debugLabel.BbcodeText = tilemap.mMapGenerator.ToRichTextString();
         }
+
+        TimeLeft -= delta;
 
     }
 

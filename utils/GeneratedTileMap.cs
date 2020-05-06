@@ -21,7 +21,10 @@ public class GeneratedTileMap : TileMap
     private int renderChunkWidth = Global.RenderWidth;
     private int leftChunkLimit = 0;
     private int rightChunkLimit { get { return leftChunkLimit + renderChunkWidth; } }
+
+    private PackedScene clockScene;
     public override void _Ready() {
+        clockScene = (PackedScene) GD.Load("res://scenes/powerups/ClockItem.tscn");
         UpdateWorldAroundX(10);
     }
 
@@ -33,7 +36,13 @@ public class GeneratedTileMap : TileMap
         for (int i = leftChunkLimit; i < rightChunkLimit; i++) {
             for(int j = 0; j > -mMapGenerator.Height; j--) { // Height is inverted
                 char cellCode = mMapGenerator.GetGlobalCell(i, j);
-                SetCell(i, j, tileFromCode(cellCode));
+                if (cellCode == 'C') {
+                    ClockItem clock = (ClockItem) clockScene.Instance();
+                    clock.GlobalPosition = MapToWorld(new Vector2(i, j)) + (new Vector2(32F, 32F));
+                    AddChild(clock);
+                } else {
+                    SetCell(i, j, tileFromCode(cellCode));
+                }
             }
         }
     }
