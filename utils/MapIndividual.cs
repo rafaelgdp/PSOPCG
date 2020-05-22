@@ -19,6 +19,9 @@ public class MapIndividual {
         }
     }
 
+    private int[] groundHeightCache;
+    private int[] spikeCache;
+
     // Immutable region:
     int immutableLeftIndex;
     int immutableRightIndex;
@@ -27,6 +30,12 @@ public class MapIndividual {
     public MapIndividual(char[,] geneMatrix) {
         this.geneMatrix = (char[,]) geneMatrix.Clone();
         updateMutabilityIndices(0, GeneticWidth - 1);
+        groundHeightCache = new int[GeneticWidth];
+        spikeCache = new int[GeneticWidth];
+        for (int i = 0; i < GeneticWidth; i++) {
+            groundHeightCache[i] = -1;
+            spikeCache[i] = -1;
+        }
     }
 
     public MapIndividual(char[,] geneMatrix, int gl = -1, int gr = -1) {
@@ -51,26 +60,21 @@ public class MapIndividual {
     static int spikePenalty = 20;
     private int getSpikeFitness() {
         int spikeFitness = 0;
-        bool hadSpike = false;
         int spikeLength = 0;
-        int previousIndex = 0;
         for (int x = 0; x < GeneticWidth; x++) {
             bool hasSpike = hasSpikeAtX(x);
             if (hasSpike) {
-                var obsDiff = obstacleHeightAtX(x) - obstacleHeightAtX(previousIndex);
-                spikeLength += 1 + Mathf.Abs(obsDiff);
-                hadSpike = true;
-            } else if (hadSpike) {
+                x++;
+                spikeLength = 1;
+                while(x < GeneticWidth && hasSpikeAtX(x)) {
+                    x++;
+                    spikeLength++;
+                }
                 // Compute fitness penalty
                 if (spikeLength > maxSpikeDistance) {
                     spikeFitness -= spikeLength * spikePenalty;
                 }
-                spikeLength = 0;
             }
-            previousIndex = x;
-        }
-        if (spikeLength > maxSpikeDistance) {
-            spikeFitness -= spikeLength * spikePenalty;
         }
         return spikeFitness;
     }
@@ -103,16 +107,21 @@ public class MapIndividual {
     }
 
     private int groundHeightAtX(int x) {
+        if (groundHeightCache[x] != -1)
+            return groundHeightCache[x];
         int y = 0;
         int groundHeight = 0;
         while (y < GeneticHeight && geneMatrix[x, y] == 'G') {
             y++;
             groundHeight++;
         }
+        groundHeightCache[x] = groundHeight;
         return groundHeight;
     }
 
     private bool hasSpikeAtX(int x) {
+        if (spikeCache[x] != -1)
+            return spikeCache[x] == 1 ? true : false;
         int y = groundHeightAtX(x);
         if (y >= GeneticHeight) return false;
         return geneMatrix[x, y] == 'S';
@@ -252,7 +261,7 @@ public class MapIndividual {
         var gh = groundHeightAtX(x);
         var shift = changeDirection * changeAbs;
         var newHeight = gh + shift;
-        shiftYAtX(x, shift);    
+        shiftYAtX(x, shift);
     }
 
     private void shiftYAtX(int x, int shift) {
@@ -273,6 +282,10 @@ public class MapIndividual {
                     geneMatrix[x, y] = 'B';
             }
         }
+        
+        // Unset cache
+        groundHeightCache[x] = -1;
+        spikeCache[x] = -1;
     }
 
     /*

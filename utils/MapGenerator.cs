@@ -199,6 +199,7 @@ public class MapGenerator {
                         r += "[color=purple]";
                         break;
                     case 'C':
+                    case 'P':
                         r += "[color=yellow]";
                         break;
                     default:

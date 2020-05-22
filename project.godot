@@ -23,6 +23,10 @@ config/icon="res://assets/images/by_rafael/icon.png"
 
 Global="*res://autoloads/Global.cs"
 
+[editor_plugins]
+
+enabled=PoolStringArray( "mono_debugger" )
+
 [importer_defaults]
 
 texture={
@@ -64,10 +68,6 @@ restart={
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":82,"unicode":0,"echo":false,"script":null)
  ]
 }
-
-[mono]
-
-debugger_agent/wait_for_debugger=true
 
 [rendering]
 

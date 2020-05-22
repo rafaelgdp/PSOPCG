@@ -99,7 +99,7 @@ margin_bottom = 82.0
 margin_top = 86.0
 margin_right = 342.0
 margin_bottom = 107.0
-text = "Population: "
+text = "Mutation Rate: "
 
 [node name="MutationRateHSlider" type="HSlider" parent="DebugUI/ParametersUI"]
 margin_top = 111.0

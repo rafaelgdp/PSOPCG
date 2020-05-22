@@ -103,7 +103,7 @@ public class GAMapGenerator : MapGenerator {
         var bestIndividual = BestIndividual;
 
         // Force playability of individual
-        bestIndividual.forcePlayability();
+        // bestIndividual.forcePlayability();
 
         int zx = 0;
         for (int i = LeftmostGlobalX; i < RightmostGlobalX; i++) {

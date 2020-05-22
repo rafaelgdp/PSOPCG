@@ -27,6 +27,7 @@ public class Global : Node
     public static float MutationRate = 0.05F;
 
     public static MapGeneratorTest MainScene;
+    public static Player Player;
 
     public override void _Input(InputEvent @event) {
         if (@event.IsActionPressed("quit")) {

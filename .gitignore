@@ -362,3 +362,6 @@ build/
 *.import
 .DS_Store
 *.mlpd
+
+*.old
+addons/

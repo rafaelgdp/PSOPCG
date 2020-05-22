@@ -24,6 +24,7 @@ public class Player : KinematicBody2D
     Vector2 defaultSnapVector = Vector2.Down * 4f;
     Vector2 snapVector = Vector2.Zero;
     Vector2 motion = Vector2.Zero;
+    float hurtForceIntensity = 500F;
 
     private bool isFalling { get { return motion.y > 0; } }
     
@@ -37,10 +38,15 @@ public class Player : KinematicBody2D
 
     // Child Nodes
     Node2D flipNodes;
+    AnimationPlayer hurtAnimation;
+    Timer hurtTimer;
 
     public override void _Ready()
     {
+        Global.Player = this;
         flipNodes = GetNode<Node2D>("FlipNodes");
+        hurtAnimation = GetNode<AnimationPlayer>("HurtAnimationPlayer");
+        hurtTimer = GetNode<Timer>("HurtCooldownTimer");
         EmitSignal("PlayerReady", this);
     }
 
@@ -48,7 +54,36 @@ public class Player : KinematicBody2D
         
         HandleMotion(delta);
         motion = MoveAndSlideWithSnap(motion, snapVector, Vector2.Up, false, 4, Mathf.Deg2Rad(46), false);
+        HandleCollision();
 
+    }
+    bool canBeHit = true;
+    private void HandleCollision() {
+        if (canBeHit) {
+            for (int i = 0; i < GetSlideCount(); i++) {
+                var collision = GetSlideCollision(i);
+                GeneratedTileMap collider = collision.Collider as GeneratedTileMap;
+                if (collider != null) {
+                    var cell = collider.WorldToMap(collision.Position - collision.Normal);
+                    var tileId = collider.GetCellv(cell);
+                    if (tileId == GeneratedTileMap.TileDictionary['S']) {
+                        // Collided with a Spike here!
+                        var reactionForce = collision.Normal + (Vector2.Up / 5F);
+                        reactionForce = reactionForce.Normalized();
+                        motion += reactionForce * hurtForceIntensity;
+                        canBeHit = false;
+                        hurtAnimation.Play("hurt");
+                        hurtTimer.Start();
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void onHurtCooldownTimerTimeout() {
+        canBeHit = true;
+        hurtAnimation.Play("normal");
     }
 
     private Vector2 scaleLeft = new Vector2(-1, 1);
