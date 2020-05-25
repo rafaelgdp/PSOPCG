@@ -12,7 +12,9 @@ public class GeneratedTileMap : TileMap
         {'B', -1},
         {'G', 0},
         {'N', 1},
-        {'S', 2}
+        {'S', 2},
+        {'C', -1},
+        {'P', -1}
     };
 
     // The clock is a special tile.
@@ -44,7 +46,7 @@ public class GeneratedTileMap : TileMap
                     ClockItem clock = (ClockItem) clockScene.Instance();
                     clock.GlobalPosition = MapToWorld(new Vector2(i, j)) + (new Vector2(32F, 32F));
                     AddChild(clock);
-                    mMapGenerator.SetGlobalCell(i, j, 'P');
+                    mMapGenerator.GetGlobalColumn(i).ClockPlaced = true;
                 } else {
                     SetCell(i, j, tileFromCode(cellCode));
                 }

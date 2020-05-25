@@ -3,8 +3,8 @@ using Godot;
 
 public class MapIndividual {
 
-    char[,] geneMatrix;
-    public char[,] GeneticMatrix { get { return geneMatrix; } }
+    GeneColumn[] geneMatrix;
+    public GeneColumn[] GeneticMatrix { get { return geneMatrix; } }
     int GeneticWidth {get { return geneMatrix.GetLength(0); }}
     int GeneticHeight {get { return geneMatrix.GetLength(1); }}
 
@@ -19,27 +19,18 @@ public class MapIndividual {
         }
     }
 
-    private int[] groundHeightCache;
-    private int[] spikeCache;
-
     // Immutable region:
     int immutableLeftIndex;
     int immutableRightIndex;
     int mutableLeftIndex;
     int mutableRightIndex;
-    public MapIndividual(char[,] geneMatrix) {
-        this.geneMatrix = (char[,]) geneMatrix.Clone();
+    public MapIndividual(GeneColumn[] geneMatrix) {
+        this.geneMatrix = (GeneColumn[]) geneMatrix.Clone();
         updateMutabilityIndices(0, GeneticWidth - 1);
-        groundHeightCache = new int[GeneticWidth];
-        spikeCache = new int[GeneticWidth];
-        for (int i = 0; i < GeneticWidth; i++) {
-            groundHeightCache[i] = -1;
-            spikeCache[i] = -1;
-        }
     }
 
-    public MapIndividual(char[,] geneMatrix, int gl = -1, int gr = -1) {
-        this.geneMatrix = (char[,]) geneMatrix.Clone();
+    public MapIndividual(GeneColumn[] geneMatrix, int gl = -1, int gr = -1) {
+        this.geneMatrix = (GeneColumn[]) geneMatrix.Clone();
         updateMutabilityIndices(gl, gr);
     }
 
@@ -107,24 +98,11 @@ public class MapIndividual {
     }
 
     private int groundHeightAtX(int x) {
-        if (groundHeightCache[x] != -1)
-            return groundHeightCache[x];
-        int y = 0;
-        int groundHeight = 0;
-        while (y < GeneticHeight && geneMatrix[x, y] == 'G') {
-            y++;
-            groundHeight++;
-        }
-        groundHeightCache[x] = groundHeight;
-        return groundHeight;
+        return geneMatrix[x].GroundHeight;
     }
 
     private bool hasSpikeAtX(int x) {
-        if (spikeCache[x] != -1)
-            return spikeCache[x] == 1 ? true : false;
-        int y = groundHeightAtX(x);
-        if (y >= GeneticHeight) return false;
-        return geneMatrix[x, y] == 'S';
+        return geneMatrix[x].HasSpike;
     }
 
     private int obstacleHeightAtX(int x) {
@@ -136,16 +114,14 @@ public class MapIndividual {
         return groundHeightAtX(x) == 0;
     }
 
-    public void UpdateGeneticMatrix(char[,] zeroGM, int gl, int gr) {
+    public void UpdateGeneticMatrix(GeneColumn[] zeroGM, int gl, int gr) {
         isFitnessUpdated = false;
         // Immutable left and right limits:
         int ili = gl == 0 ? gr + 1 : 0;
         int iri = gr == GeneticWidth - 1 ? gl - 1 : GeneticWidth - 1;
         updateMutabilityIndices(gl, gr, ili, iri);
         for (int x = ili; x <= iri; x++) {
-            for (int y = 0; y < GeneticHeight; y++) {
-                geneMatrix[x, y] = zeroGM[x, y];
-            }
+            geneMatrix[x] = zeroGM[x];
         }
     }
 
@@ -172,7 +148,7 @@ public class MapIndividual {
         this.immutableRightIndex = iri;
     }
 
-    internal char[,] CrossoverWith(MapIndividual parent2)
+    internal GeneColumn[] CrossoverWith(MapIndividual parent2)
     {
         Random random = new Random();
         int mutableXRange = mutableRightIndex - mutableLeftIndex + 1;
@@ -181,25 +157,19 @@ public class MapIndividual {
         int crossoverXPoint = random.Next(leftPoint, rightPoint);
         var leftParent = random.Next(1) == 0 ? this : parent2;
         
-        char[,] childGenes = new char[GeneticWidth, GeneticHeight];
+        GeneColumn[] childGenes = new GeneColumn[GeneticWidth];
         // Copy left parent genetic code to child
         for (int x = mutableLeftIndex; x < leftPoint; x++) {
-            for (int y = 0; y < GeneticHeight; y++) {
-                childGenes[x, y] = leftParent.GeneticMatrix[x, y];
-            }
+            childGenes[x] = leftParent.GeneticMatrix[x];
         }
         // Copy right parent genetic code to child
         for (int x = leftPoint; x <= rightPoint; x++) {
-            for (int y = 0; y < GeneticHeight; y++) {
-                childGenes[x, y] = leftParent.GeneticMatrix[x, y];
-            }
+            childGenes[x] = leftParent.GeneticMatrix[x];
         }
 
         // Copy immutable genetic region from either parent
         for (int x = immutableLeftIndex; x <= immutableRightIndex; x++) {
-            for (int y = 0; y < GeneticHeight; y++) {
-                childGenes[x, y] = leftParent.GeneticMatrix[x, y];
-            }
+            childGenes[x] = leftParent.GeneticMatrix[x];
         }
 
         return childGenes;
@@ -226,31 +196,12 @@ public class MapIndividual {
 
     private void mutateClockAtX(int x)
     {
-        int y = groundHeightAtX(x);
-        if (hasSpikeAtX(x)) y++;
-        if (y < GeneticHeight) {
-            geneMatrix[x, y] = geneMatrix[x, y] == 'B' ? 'C' : 'B';
-        }
+        geneMatrix[x].HasClock = !geneMatrix[x].HasClock;
     }
 
     private void mutateSpikeAtX(int x)
     {
-        int y = groundHeightAtX(x);
-        if (y >= GeneticHeight) return;
-        switch (geneMatrix[x, y]) {
-            case 'B':
-                geneMatrix[x, y] = 'S';
-                break;
-            case 'S':
-                geneMatrix[x, y] = 'B';
-                break;
-            case 'C':
-                geneMatrix[x, y] = 'S';
-                if (y + 1 < GeneticHeight)
-                    geneMatrix[x, y + 1] = 'C';
-                break;
-        }
-
+        geneMatrix[x].HasSpike = !geneMatrix[x].HasSpike;
     }
 
     Random random = new Random();
@@ -260,32 +211,7 @@ public class MapIndividual {
         var changeDirection = random.Next(2) == 1 ? 1 : -1;
         var gh = groundHeightAtX(x);
         var shift = changeDirection * changeAbs;
-        var newHeight = gh + shift;
-        shiftYAtX(x, shift);
-    }
-
-    private void shiftYAtX(int x, int shift) {
-        if (shift > 0) {
-            for (var y = GeneticHeight - 1; y >= 0; y--) {
-                var shiftedY = y - shift;
-                if (shiftedY >= 0)
-                    geneMatrix[x, y] = geneMatrix[x, shiftedY];
-                else
-                    geneMatrix[x, y] = 'G';
-            }
-        } else if (shift < 0) {
-            for (var y = 0; y < GeneticHeight; y++) {
-                var shiftedY = y - shift;
-                if (shiftedY < GeneticHeight)
-                    geneMatrix[x, y] = geneMatrix[x, shiftedY];
-                else
-                    geneMatrix[x, y] = 'B';
-            }
-        }
-        
-        // Unset cache
-        groundHeightCache[x] = -1;
-        spikeCache[x] = -1;
+        geneMatrix[x].GroundHeight += shift;
     }
 
     /*
@@ -320,7 +246,7 @@ public class MapIndividual {
             var currentObstacleHeight = obstacleHeightAtX(x);
             var obstacleDiff = currentObstacleHeight - previousObstacleHeight;
             if (Mathf.Abs(obstacleDiff) > jumpLimit) {
-                shiftYAtX(x, -obstacleDiff + Mathf.Sign(obstacleDiff));
+                geneMatrix[x].GroundHeight += -obstacleDiff + Mathf.Sign(obstacleDiff);
                 currentObstacleHeight = obstacleHeightAtX(x); // Update height
             }
 
@@ -329,7 +255,7 @@ public class MapIndividual {
                 previousGroundDistance += Mathf.Abs(currentObstacleHeight - previousGroundHeight); // Approx. vertical dist.
 
                 if (previousGroundDistance > jumpLimit) {
-                    shiftYAtX(x, -(currentObstacleHeight - previousGroundHeight));
+                    geneMatrix[x].GroundHeight += -(currentObstacleHeight - previousGroundHeight);
                     currentObstacleHeight = obstacleHeightAtX(x); // Update height
                 }
             }
@@ -364,7 +290,6 @@ public class MapIndividual {
 
         }
     }
-
     private bool hasEnemyAtX(int x) {
         return hasSpikeAtX(x); // || hasCrazyEnemyAtX...
     }

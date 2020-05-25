@@ -34,18 +34,16 @@ public class MapGenerator {
     protected int leftmostIndex = 0;
     public int RightmostGlobalX { get { return leftmostGlobalX + width - 1; }}
     public int CenterGlobalX { get { return LeftmostGlobalX + (Width / 2); }}
-    protected char[,] matrix;
+    protected GeneColumn[] matrix;
     protected Random random = new Random();
     protected int floorZeroHeight = 3;
     public MapGenerator(int width = 15, int height = 12, int globalOriginX = 0) {
         this.width = width;
         this.height = height;
         this.leftmostIndex = 0;
-        this.matrix = new char[width, height]; // +2 is workaround for corner cases
+        this.matrix = new GeneColumn[width]; // +2 is workaround for corner cases
         for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                this.matrix[i, j] = 'B';
-            }
+            this.matrix[i] = new GeneColumn(3);
         }
         initializeMap(globalOriginX);
     }
@@ -53,45 +51,23 @@ public class MapGenerator {
     protected void initializeMap(int x) {
         leftmostGlobalX = x - (Width / 2);
         for (int i = LeftmostGlobalX; i <= RightmostGlobalX; i++) {
-            for (int j = 0; j < floorZeroHeight; j++) {
-                SetGlobalCell(i, j, 'G');
-            }
+            SetGlobalColumn(i, new GeneColumn(floorZeroHeight));
         }
     }
 
     public char GetGlobalCell(int x, int y) {
-        y = Mathf.Abs(y); // Compatible with positive and negative Y values.
-        if (y >= Height) {
-            // If above y limits, simply return default (e.g. Blank).
-            return DefaultCell;
-        }
-
-        if (x < LeftmostGlobalX || x > RightmostGlobalX) {
-            RegenerateChunkCenteredAt(x);
-        }
-
-        int localX = (leftmostIndex + x - LeftmostGlobalX) % width;
-        int localY = y;
-        return matrix[localX, localY];
+        return GetGlobalColumn(x).CellAtY(y);
     }
 
-    public char SetGlobalCell(int x, int y, char newValue) {
-        
-        y = Mathf.Abs(y); // Compatible with positive and negative Y values.
-        if (y >= Height) {
-            // If above y limits, simply return default (e.g. Blank).
-            // And do NOTHING.
-            return DefaultCell;
-        }
+    public GeneColumn SetGlobalColumn(int x, GeneColumn newValue) {
 
         if (x < LeftmostGlobalX || x > RightmostGlobalX) {
             RegenerateChunkCenteredAt(x);
         }
 
         int localX = (leftmostIndex + x - LeftmostGlobalX) % Width;
-        int localY = y;
-        var oldValue = matrix[localX, localY];
-        matrix[localX, localY] = newValue;
+        var oldValue = matrix[localX];
+        matrix[localX] = newValue;
         return oldValue;
     }
 
@@ -147,15 +123,10 @@ public class MapGenerator {
     }
     protected virtual void generateMap(int generatedLeftmostX, int generatedRightmostX) {
 
-        var floorHeight = generatedLeftmostX;
+        var floorHeight = Mathf.Abs(generatedLeftmostX);
         for (int i = generatedLeftmostX; i <= generatedRightmostX; i++) {
             floorHeight %= (Height - 7);
-            for (int j = 0; j < floorHeight + 1; j++) {
-                SetGlobalCell(i, j, 'N');
-            }
-            for (int j = floorHeight + 1; j < Height; j++) {
-                SetGlobalCell(i, j, 'B');
-            }
+            SetGlobalColumn(i, new GeneColumn(floorHeight));
             floorHeight++;
         }
     }
@@ -165,7 +136,7 @@ public class MapGenerator {
         for(int j = Height - 1; j >= 0; j--) {
             r += $"{j,6:000000}: ";
             for (int i = 0; i < Width; i++) {
-                r += $"{matrix[i,j]}";
+                r += $"{matrix[i].CellAtY(j)}";
             }
             r += "\n";
         }
@@ -188,7 +159,7 @@ public class MapGenerator {
         for(int j = Height - 1; j >= 0; j--) {
             r += $"{j,6:000000}: ";
             for (int i = 0; i < Width; i++) {
-                switch(matrix[i,j]) {
+                switch(matrix[i].CellAtY(j)) {
                     case 'G':
                         r += "[color=gray]";
                         break;
@@ -206,7 +177,7 @@ public class MapGenerator {
                         r += "[color=cyan]";
                         break;
                 }
-                r += $"{matrix[i,j]}";
+                r += $"{matrix[i].CellAtY(j)}";
                 r += "[/color]";
             }
             r += "\n";
@@ -263,4 +234,13 @@ public class MapGenerator {
 
         return r;
     }
+
+    public GeneColumn GetGlobalColumn(int x) {
+        if (x < LeftmostGlobalX || x > RightmostGlobalX) {
+            RegenerateChunkCenteredAt(x);
+        }
+        int localX = (leftmostIndex + x - LeftmostGlobalX) % width;
+        return matrix[localX]; 
+    }
+
 }

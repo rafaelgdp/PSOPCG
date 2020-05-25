@@ -49,12 +49,12 @@ public class GAMapGenerator : MapGenerator {
         }
     }
 
-    private char[,] getZeroIndexedMatrix() {
-        char[,] zm = new char[width, height];
+    private GeneColumn[] getZeroIndexedMatrix() {
+        GeneColumn[] zm = new GeneColumn[width];
         int zx = 0;
         for (int x = LeftmostGlobalX; x <= RightmostGlobalX; x++) {
             for (int y = 0; y < height; y++) {
-                zm[zx, y] = GetGlobalCell(x, y);
+                zm[zx] = GetGlobalColumn(x);
             }
             zx++;
         }
@@ -90,7 +90,7 @@ public class GAMapGenerator : MapGenerator {
                 var parent1 = pickParent();
                 var parent2 = pickParent();
                 // Crossover parents
-                char[,] childGenes = crossover(parent1, parent2);
+                GeneColumn[] childGenes = crossover(parent1, parent2);
                 MapIndividual newChild = new MapIndividual(childGenes, zgl, zgr);
                 children[ci] = newChild;
             }
@@ -103,12 +103,12 @@ public class GAMapGenerator : MapGenerator {
         var bestIndividual = BestIndividual;
 
         // Force playability of individual
-        // bestIndividual.forcePlayability();
+        bestIndividual.forcePlayability();
 
         int zx = 0;
         for (int i = LeftmostGlobalX; i < RightmostGlobalX; i++) {
             for (int j = 0; j < Height; j++) {
-                SetGlobalCell(i, j, bestIndividual.GeneticMatrix[zx, j]);
+                GetGlobalColumn(i).Clone(bestIndividual.GeneticMatrix[zx]);
             }
             zx++;
         }
@@ -120,7 +120,7 @@ public class GAMapGenerator : MapGenerator {
         }
     }
 
-    private char[,] crossover(MapIndividual parent1, MapIndividual parent2)
+    private GeneColumn[] crossover(MapIndividual parent1, MapIndividual parent2)
     {
         return parent1.CrossoverWith(parent2);
     }
