@@ -154,9 +154,27 @@ public class MapIndividual {
         int mutableXRange = mutableRightIndex - mutableLeftIndex + 1;
         int leftPoint = mutableLeftIndex + mutableXRange / 4;
         int rightPoint = mutableRightIndex - mutableXRange / 4;
-        int crossoverXPoint = random.Next(leftPoint, rightPoint);
         var leftParent = random.Next(1) == 0 ? this : parent2;
-        
+        var rightParent = leftParent == this ? parent2 : this;
+
+        int maxTries = rightPoint - leftPoint + 1;
+        int tries = 0;
+        int originalCrossoverXPoint = random.Next(leftPoint, rightPoint);
+        int crossoverXPoint = originalCrossoverXPoint;
+
+        int lowestDiff = Mathf.Abs(leftParent.GeneticMatrix[crossoverXPoint].GroundHeight - rightParent.GeneticMatrix[crossoverXPoint].GroundHeight);
+        int lowestDiffIndex = crossoverXPoint;
+        // Make sure gene combination creates a valid individual
+        while (tries < maxTries && !IsCrossOverXValid(crossoverXPoint, leftParent, rightParent)) {
+            crossoverXPoint = Mathf.Wrap(crossoverXPoint + 1, leftPoint, rightPoint);
+            int diff = Mathf.Abs(leftParent.GeneticMatrix[crossoverXPoint].GroundHeight - rightParent.GeneticMatrix[crossoverXPoint].GroundHeight);
+            if (diff < lowestDiff) {
+                lowestDiff = diff;
+                lowestDiffIndex = crossoverXPoint;
+            }
+            tries++;
+        }
+
         GeneColumn[] childGenes = new GeneColumn[GeneticWidth];
         // Copy left parent genetic code to child
         for (int x = mutableLeftIndex; x < leftPoint; x++) {
@@ -164,7 +182,7 @@ public class MapIndividual {
         }
         // Copy right parent genetic code to child
         for (int x = leftPoint; x <= rightPoint; x++) {
-            childGenes[x] = leftParent.GeneticMatrix[x];
+            childGenes[x] = rightParent.GeneticMatrix[x];
         }
 
         // Copy immutable genetic region from either parent
@@ -172,7 +190,20 @@ public class MapIndividual {
             childGenes[x] = leftParent.GeneticMatrix[x];
         }
 
+        if (tries >= maxTries) { // Adjust genes around crossover x point.
+            for(int i = mutableLeftIndex; i < mutableRightIndex; i++) {
+                childGenes[i].GroundHeight = Mathf.Min(childGenes[i].GroundHeight, jumpLimit);
+            }
+        }
+
         return childGenes;
+    }
+
+    private bool IsCrossOverXValid(int crossoverXPoint, MapIndividual leftParent, MapIndividual rightParent)
+    {
+        bool heightOK = Mathf.Abs(leftParent.GeneticMatrix[crossoverXPoint].GroundHeight - rightParent.GeneticMatrix[crossoverXPoint].GroundHeight) < jumpLimit;
+        // Maybe check for spikes and clocks too
+        return heightOK;
     }
 
     internal void Mutate(float mutationRate)

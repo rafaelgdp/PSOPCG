@@ -30,7 +30,7 @@ public class GeneColumn {
         if (localY == GroundHeight && HasSpike) return 'S';
         if  ((localY == GroundHeight && HasClock) ||
             (localY == GroundHeight + 1 && HasSpike && HasClock))
-                return ClockPlaced ? 'P' : 'C';
+                return ClockPlaced ? 'c' : 'C';
         return 'B';
     }
 

@@ -69,6 +69,10 @@ restart={
  ]
 }
 
+[mono]
+
+debugger_agent/wait_for_debugger=true
+
 [rendering]
 
 quality/driver/driver_name="GLES2"

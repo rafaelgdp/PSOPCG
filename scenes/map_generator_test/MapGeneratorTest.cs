@@ -27,7 +27,9 @@ public class MapGeneratorTest : Node2D
 
     public override void _Ready() {
         Global.MainScene = this;
-        TimeLeft = 25F;
+        if (Global.IsDebug) {
+            TimeLeft = 25000F;
+        }        
         player = GetNode<Player>("Player");
         tilemap = GetNode<GeneratedTileMap>("GeneratedTileMap");
         debugLabel = GetNode<RichTextLabel>("DebugUI/DebugLabel");

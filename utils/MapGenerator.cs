@@ -170,7 +170,7 @@ public class MapGenerator {
                         r += "[color=purple]";
                         break;
                     case 'C':
-                    case 'P':
+                    case 'c':
                         r += "[color=yellow]";
                         break;
                     default:

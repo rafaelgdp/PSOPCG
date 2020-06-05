@@ -14,12 +14,12 @@ public class GeneratedTileMap : TileMap
         {'N', 1},
         {'S', 2},
         {'C', -1},
-        {'P', -1}
+        {'c', -1}
     };
 
     // The clock is a special tile.
     // 'C' denotes an unplaced clock.
-    // 'P' denotes a placed clock.
+    // 'c' denotes a placed clock.
 
     public int RenderChunkWidth { get { return renderChunkWidth; } }
     public int LeftmostGlobalX { get { return leftChunkLimit; }}
@@ -27,10 +27,13 @@ public class GeneratedTileMap : TileMap
     private int renderChunkWidth = Global.RenderWidth;
     private int leftChunkLimit = 0;
     private int rightChunkLimit { get { return leftChunkLimit + renderChunkWidth; } }
+    private HashSet<int> placedXLabels = new HashSet<int>();
 
     private PackedScene clockScene;
+    private PackedScene cellXLabelScene;
     public override void _Ready() {
         clockScene = (PackedScene) GD.Load("res://scenes/powerups/ClockItem.tscn");
+        cellXLabelScene = (PackedScene) GD.Load("res://scenes/tilemap/CellXLabel.tscn");
         UpdateWorldAroundX(10);
     }
 
@@ -47,9 +50,17 @@ public class GeneratedTileMap : TileMap
                     clock.GlobalPosition = MapToWorld(new Vector2(i, j)) + (new Vector2(32F, 32F));
                     AddChild(clock);
                     mMapGenerator.GetGlobalColumn(i).ClockPlaced = true;
+                    break; // Not necessary to preceed
                 } else {
                     SetCell(i, j, tileFromCode(cellCode));
                 }
+            }
+            if (i % 10 == 0 && !placedXLabels.Contains(i)) {
+                // Place a Global X Label
+                CellXLabel xlabel = (CellXLabel) cellXLabelScene.Instance();
+                xlabel.GlobalX = i;
+                xlabel.GlobalPosition = MapToWorld(new Vector2(i, -9)) + (new Vector2(32F, 32F));
+                AddChild(xlabel);
             }
         }
     }
@@ -63,17 +74,19 @@ public class GeneratedTileMap : TileMap
 
         var currentCells = GetUsedCells();
         var newRightChunkLimit = newLeftChunkLimit + renderChunkWidth;
+
+        int startIndex;
+        int endIndex;
         if (newLeftChunkLimit < leftChunkLimit) {
-            for (int i = newRightChunkLimit + 1; i <= rightChunkLimit; i++) {
-                for(int j = 0; j > -mMapGenerator.Height; j--) { // Height is inverted
-                    SetCell(i, j, TileDictionary['B']); // Set outer cells to blank
-                }
-            }
+            startIndex = newRightChunkLimit + 1;
+            endIndex = rightChunkLimit;
         } else {
-            for (int i = leftChunkLimit; i < newLeftChunkLimit; i++) {
-                for(int j = 0; j > -mMapGenerator.Height; j--) { // Height is inverted
-                    SetCell(i, j, TileDictionary['B']); // Set outer cells to blank
-                }
+            startIndex = leftChunkLimit;
+            endIndex = newLeftChunkLimit - 1;
+        }
+        for (int i = startIndex + 1; i <= endIndex; i++) {
+            for(int j = 0; j > -mMapGenerator.Height; j--) { // Height is inverted
+                SetCell(i, j, TileDictionary['B']); // Set outer cells to blank
             }
         }
     }

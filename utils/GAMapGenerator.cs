@@ -103,13 +103,11 @@ public class GAMapGenerator : MapGenerator {
         var bestIndividual = BestIndividual;
 
         // Force playability of individual
-        bestIndividual.forcePlayability();
+        //bestIndividual.forcePlayability();
 
         int zx = 0;
         for (int i = LeftmostGlobalX; i < RightmostGlobalX; i++) {
-            for (int j = 0; j < Height; j++) {
-                GetGlobalColumn(i).Clone(bestIndividual.GeneticMatrix[zx]);
-            }
+            GetGlobalColumn(i).Clone(bestIndividual.GeneticMatrix[zx]);
             zx++;
         }
     }

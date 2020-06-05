@@ -3,6 +3,8 @@ using System;
 
 public class Global : Node
 {
+
+    public static bool IsDebug = true;
     public static float Gravity = 1000F;
     public static float Friction = 1000F;
     public static int Population = 30;
