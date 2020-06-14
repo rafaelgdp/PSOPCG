@@ -24,13 +24,14 @@ public class MapIndividual {
     int immutableRightIndex;
     int mutableLeftIndex;
     int mutableRightIndex;
-    public MapIndividual(GeneColumn[] geneMatrix) {
-        this.geneMatrix = (GeneColumn[]) geneMatrix.Clone();
-        updateMutabilityIndices(0, GeneticWidth - 1);
-    }
+    public MapIndividual(GeneColumn[] geneMatrix) : this(geneMatrix, -1, -1) {}
 
     public MapIndividual(GeneColumn[] geneMatrix, int gl = -1, int gr = -1) {
-        this.geneMatrix = (GeneColumn[]) geneMatrix.Clone();
+        this.geneMatrix = new GeneColumn[geneMatrix.Length];
+        for (int i = 0; i < geneMatrix.Length; i++) {
+            this.geneMatrix[i] = new GeneColumn();
+            this.geneMatrix[i].Clone(geneMatrix[i]);
+        }
         updateMutabilityIndices(gl, gr);
     }
 
@@ -88,7 +89,7 @@ public class MapIndividual {
             var gh = groundHeightAtX(x);
             var ghDiff = Mathf.Abs(previousGroundHeight - gh);
             if (ghDiff > jumpLimit) {
-                groundFitness -= 50 * ghDiff;
+                groundFitness -= 100 * ghDiff;
             } else {
                 groundFitness += 10;
             }
@@ -177,11 +178,11 @@ public class MapIndividual {
 
         GeneColumn[] childGenes = new GeneColumn[GeneticWidth];
         // Copy left parent genetic code to child
-        for (int x = mutableLeftIndex; x < leftPoint; x++) {
+        for (int x = mutableLeftIndex; x < crossoverXPoint; x++) {
             childGenes[x] = leftParent.GeneticMatrix[x];
         }
         // Copy right parent genetic code to child
-        for (int x = leftPoint; x <= rightPoint; x++) {
+        for (int x = crossoverXPoint; x <= mutableRightIndex; x++) {
             childGenes[x] = rightParent.GeneticMatrix[x];
         }
 

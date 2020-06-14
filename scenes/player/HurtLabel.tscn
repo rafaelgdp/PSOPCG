@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://scenes/ui/UiTheme.tres" type="Theme" id=1]
+
+[node name="HurtLabel" type="Label"]
+visible = false
+modulate = Color( 1, 0.235294, 0, 1 )
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -41.3007
+margin_top = -23.3113
+margin_right = -1.30069
+margin_bottom = -2.31132
+grow_horizontal = 2
+grow_vertical = 2
+rect_scale = Vector2( 2, 2 )
+theme = ExtResource( 1 )
+text = "-10"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false,
+"_editor_description_": ""
+}

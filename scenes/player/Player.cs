@@ -40,6 +40,7 @@ public class Player : KinematicBody2D
     Node2D flipNodes;
     AnimationPlayer hurtAnimation;
     Timer hurtTimer;
+    PackedScene hurtLabelScene;
 
     public override void _Ready()
     {
@@ -47,6 +48,7 @@ public class Player : KinematicBody2D
         flipNodes = GetNode<Node2D>("FlipNodes");
         hurtAnimation = GetNode<AnimationPlayer>("HurtAnimationPlayer");
         hurtTimer = GetNode<Timer>("HurtCooldownTimer");
+        hurtLabelScene = GD.Load("res://scenes/player/HurtLabel.tscn") as PackedScene;
         EmitSignal("PlayerReady", this);
     }
 
@@ -73,6 +75,20 @@ public class Player : KinematicBody2D
                         motion += reactionForce * hurtForceIntensity;
                         canBeHit = false;
                         hurtAnimation.Play("hurt");
+
+                        // Decreased time animation
+                        float amount = (float) GD.RandRange(2.0F, 5.0F);
+                        Global.MainScene.TimeLeft -= amount;
+                        Label hurtLabel = hurtLabelScene.Instance() as Label;
+                        Tween t = new Tween();
+                        Global.MainScene.AddChild(t);
+                        hurtLabel.Visible = true;
+                        hurtLabel.RectPosition = GlobalPosition;
+                        t.InterpolateProperty(hurtLabel, "rect_position", hurtLabel.RectPosition, hurtLabel.RectPosition + (Vector2.Up * 40F), 0.9F);
+                        t.Connect("tween_all_completed", hurtLabel, nameof(hurtLabel.QueueFree));
+                        t.Start();
+
+                        // Start timer that resets to "hurtable" state
                         hurtTimer.Start();
                         break;
                     }

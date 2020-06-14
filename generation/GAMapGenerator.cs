@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using Godot;
 
 public class GAMapGenerator : MapGenerator {
     private List<MapIndividual> population;
@@ -95,8 +96,14 @@ public class GAMapGenerator : MapGenerator {
                 children[ci] = newChild;
             }
 
+            for (int ci = 0; ci < numberOfChildren; ci++) {
+                population[ci] = children[ci];
+            }
+
+            Debug.Log($"BEFORE MUTATION: Iteration:{i}, population[0].GeneticMatrix[31]: {population[0].GeneticMatrix[31]}");
             // Mutation
             mutatePopulation();
+            Debug.Log($"AFTER MUTATION: Iteration:{i}, population[0].GeneticMatrix[31]: {population[0].GeneticMatrix[31]}");
         }
 
         // Update world matrix with best individual

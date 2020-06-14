@@ -4,7 +4,7 @@ using Godot;
 public class GeneColumn {
     int groundHeight = 0;
     public int GroundHeight {
-        get { return groundHeight; }
+        get { return groundHeight + (HasSpike ? 1 : 0); }
         set { groundHeight = Mathf.Clamp(value, 0, 12); }
         }
     public bool HasSpike = false;
@@ -27,9 +27,10 @@ public class GeneColumn {
     internal char CellAtY(int y) {
         int localY = Mathf.Abs(y);
         if (localY < GroundHeight) return 'G';
-        if (localY == GroundHeight && HasSpike) return 'S';
-        if  ((localY == GroundHeight && HasClock) ||
-            (localY == GroundHeight + 1 && HasSpike && HasClock))
+        if (HasSpike && localY == GroundHeight) return 'S';
+        if  (HasClock &&
+            ((localY == GroundHeight && !HasSpike) ||
+            (localY == GroundHeight + 1 && HasSpike)))
                 return ClockPlaced ? 'c' : 'C';
         return 'B';
     }
@@ -39,5 +40,10 @@ public class GeneColumn {
         this.HasSpike = gc.HasSpike;
         this.HasClock = gc.HasClock;
         this.ClockPlaced = gc.ClockPlaced;
+    }
+
+    public override string ToString() {
+        String r = $"GroundHeight: {GroundHeight}, HasSpike: {HasSpike}, HasClock: {HasClock}.";
+        return r;
     }
 }

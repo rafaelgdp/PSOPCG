@@ -22,6 +22,7 @@ config/icon="res://assets/images/by_rafael/icon.png"
 [autoload]
 
 Global="*res://autoloads/Global.cs"
+Debug="*res://autoloads/Debug.cs"
 
 [editor_plugins]
 
@@ -71,7 +72,7 @@ restart={
 
 [mono]
 
-debugger_agent/wait_for_debugger=true
+debugger_agent/port=23690
 
 [rendering]
 
