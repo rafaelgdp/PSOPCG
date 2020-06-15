@@ -3,11 +3,12 @@ using Godot;
 
 public class MapIndividual {
 
-    GeneColumn[] geneMatrix;
-    public GeneColumn[] GeneticMatrix { get { return geneMatrix; } }
-    int GeneticWidth {get { return geneMatrix.GetLength(0); }}
-    int GeneticHeight {get { return geneMatrix.GetLength(1); }}
-
+    public GeneColumn leftmostRef;
+    public GeneColumn generationLeftRef;
+    public GeneColumn generationRightRef;
+    public int referenceChunkSize;
+    public int generationChunkSize;
+    public bool isLeftGeneration;
     bool isFitnessUpdated = false;
     int cachedFitness = 0;
     public int Fitness { 
@@ -19,20 +20,29 @@ public class MapIndividual {
         }
     }
 
-    // Immutable region:
-    int immutableLeftIndex;
-    int immutableRightIndex;
-    int mutableLeftIndex;
-    int mutableRightIndex;
-    public MapIndividual(GeneColumn[] geneMatrix) : this(geneMatrix, -1, -1) {}
-
-    public MapIndividual(GeneColumn[] geneMatrix, int gl = -1, int gr = -1) {
-        this.geneMatrix = new GeneColumn[geneMatrix.Length];
-        for (int i = 0; i < geneMatrix.Length; i++) {
-            this.geneMatrix[i] = new GeneColumn();
-            this.geneMatrix[i].Clone(geneMatrix[i]);
+    public MapIndividual(GeneColumn leftmostRef, int referenceChunkSize, int generationChunkSize, bool isLeftGeneration) {
+        this.leftmostRef = leftmostRef;
+        this.referenceChunkSize = referenceChunkSize;
+        this.generationChunkSize = generationChunkSize;
+        this.isLeftGeneration = isLeftGeneration;
+        GeneColumn iterator = leftmostRef;
+        if (isLeftGeneration) {
+            this.generationLeftRef = leftmostRef;
+            for (int i = 0; i < generationChunkSize; i++) {
+                iterator = iterator.RightColumn;
+            }
+            this.generationRightRef = iterator;
+        } else {
+            for (int i = 0; i < referenceChunkSize; i++) {
+                iterator = iterator.RightColumn;
+            }
+            this.generationLeftRef = iterator;
+            for (int i = 0; i < generationChunkSize - 1; i++) {
+                iterator = iterator.RightColumn;
+            }
+            this.generationRightRef = iterator;
         }
-        updateMutabilityIndices(gl, gr);
+        
     }
 
     public int GetFitness() {
@@ -53,13 +63,12 @@ public class MapIndividual {
     private int getSpikeFitness() {
         int spikeFitness = 0;
         int spikeLength = 0;
-        for (int x = 0; x < GeneticWidth; x++) {
-            bool hasSpike = hasSpikeAtX(x);
-            if (hasSpike) {
-                x++;
+        for (GeneColumn x = this.leftmostRef; x != null; x = x.RightColumn) {
+            if (x.HasSpike) {
+                x = x.RightColumn;
                 spikeLength = 1;
-                while(x < GeneticWidth && hasSpikeAtX(x)) {
-                    x++;
+                while(x != null && x.HasSpike) {
+                    x = x.RightColumn;
                     spikeLength++;
                 }
                 // Compute fitness penalty
@@ -75,10 +84,10 @@ public class MapIndividual {
     int maxJumpableHole = 4;
     private int getGroundFitness() {
         int groundFitness = 0;
-        int previousGroundHeight = groundHeightAtX(0);
         int holeLength = 0;
-        for (int x = 1; x < GeneticWidth; x++) {
-            if (previousGroundHeight == 0) {
+
+        for (GeneColumn x = this.leftmostRef.RightColumn; x != null; x = x.RightColumn) {
+            if (x.LeftColumn.GroundHeight == 0) {
                 holeLength++;
                 if (holeLength > maxJumpableHole) {
                     groundFitness -= 100;
@@ -86,131 +95,74 @@ public class MapIndividual {
             } else {
                 holeLength = 0;
             }
-            var gh = groundHeightAtX(x);
-            var ghDiff = Mathf.Abs(previousGroundHeight - gh);
+
+            var ghDiff = Mathf.Abs(x.LeftColumn.GroundHeight - x.GroundHeight);
             if (ghDiff > jumpLimit) {
                 groundFitness -= 100 * ghDiff;
             } else {
                 groundFitness += 10;
             }
-            previousGroundHeight = gh;
         }
         return groundFitness;
     }
 
-    private int groundHeightAtX(int x) {
-        return geneMatrix[x].GroundHeight;
-    }
-
-    private bool hasSpikeAtX(int x) {
-        return geneMatrix[x].HasSpike;
-    }
-
-    private int obstacleHeightAtX(int x) {
-        int extraBlock = hasSpikeAtX(x) ? 1 : 0;
-        return groundHeightAtX(x) + extraBlock;
-    }
-
-    private bool hasAHoleAtX(int x) {
-        return groundHeightAtX(x) == 0;
-    }
-
-    public void UpdateGeneticMatrix(GeneColumn[] zeroGM, int gl, int gr) {
-        isFitnessUpdated = false;
-        // Immutable left and right limits:
-        int ili = gl == 0 ? gr + 1 : 0;
-        int iri = gr == GeneticWidth - 1 ? gl - 1 : GeneticWidth - 1;
-        updateMutabilityIndices(gl, gr, ili, iri);
-        for (int x = ili; x <= iri; x++) {
-            geneMatrix[x] = zeroGM[x];
-        }
-    }
-
-    private void updateMutabilityIndices(int gl, int gr)
-    {
-        this.mutableLeftIndex = gl;
-        this.mutableRightIndex = gr;
-        if (gl < 0 || gr < 0) {
-            this.immutableLeftIndex = 0;
-            this.immutableRightIndex = geneMatrix.Length - 1;
-        } else {
-            int ili = gl == 0 ? gr + 1 : 0;
-            int iri = gr == geneMatrix.Length - 1 ? gl - 1 : geneMatrix.Length - 1;
-            this.immutableLeftIndex = ili;
-            this.immutableRightIndex = iri;
-        }
-    }
-
-    private void updateMutabilityIndices(int gl, int gr, int ili, int iri)
-    {
-        this.mutableLeftIndex = gl;
-        this.mutableRightIndex = gr;
-        this.immutableLeftIndex = ili;
-        this.immutableRightIndex = iri;
-    }
-
-    internal GeneColumn[] CrossoverWith(MapIndividual parent2)
+    internal GeneColumn CrossoverWith(MapIndividual parent2)
     {
         Random random = new Random();
-        int mutableXRange = mutableRightIndex - mutableLeftIndex + 1;
-        int leftPoint = mutableLeftIndex + mutableXRange / 4;
-        int rightPoint = mutableRightIndex - mutableXRange / 4;
-        var leftParent = random.Next(1) == 0 ? this : parent2;
-        var rightParent = leftParent == this ? parent2 : this;
+        int mutableXRange = this.generationChunkSize;
+        int leftPoint = (mutableXRange / 8);
+        int rightPoint = mutableXRange - (mutableXRange / 8);
+
+        MapIndividual leftParent = random.Next(1) == 0 ? this : parent2;
+        MapIndividual rightParent = leftParent == this ? parent2 : this;
 
         int maxTries = rightPoint - leftPoint + 1;
         int tries = 0;
         int originalCrossoverXPoint = random.Next(leftPoint, rightPoint);
         int crossoverXPoint = originalCrossoverXPoint;
+        GeneColumn leftParentCol = leftParent.generationLeftRef.SeekNthColumn(crossoverXPoint);
+        GeneColumn rightParentCol = rightParent.generationLeftRef.SeekNthColumn(crossoverXPoint);
 
-        int lowestDiff = Mathf.Abs(leftParent.GeneticMatrix[crossoverXPoint].GroundHeight - rightParent.GeneticMatrix[crossoverXPoint].GroundHeight);
+        int lowestDiff = Mathf.Abs(leftParentCol.GroundHeight - rightParentCol.GroundHeight);
         int lowestDiffIndex = crossoverXPoint;
         // Make sure gene combination creates a valid individual
-        while (tries < maxTries && !IsCrossOverXValid(crossoverXPoint, leftParent, rightParent)) {
-            crossoverXPoint = Mathf.Wrap(crossoverXPoint + 1, leftPoint, rightPoint);
-            int diff = Mathf.Abs(leftParent.GeneticMatrix[crossoverXPoint].GroundHeight - rightParent.GeneticMatrix[crossoverXPoint].GroundHeight);
-            if (diff < lowestDiff) {
-                lowestDiff = diff;
-                lowestDiffIndex = crossoverXPoint;
-            }
+        int crossoverJump = 1;
+        while (tries < maxTries && !IsCrossOverXValid(leftParentCol, rightParentCol)) {
+            leftParentCol = leftParentCol.SeekNthColumn(crossoverJump);
+            rightParentCol = rightParentCol.SeekNthColumn(crossoverJump);
+            crossoverJump = -Mathf.Sign(crossoverJump) * (Mathf.Abs(crossoverJump) + 1);
             tries++;
         }
 
-        GeneColumn[] childGenes = new GeneColumn[GeneticWidth];
+        GeneColumn childGenes = new GeneColumn(leftParent.leftmostRef);
+        GeneColumn childLeftRef = childGenes;
         // Copy left parent genetic code to child
-        for (int x = mutableLeftIndex; x < crossoverXPoint; x++) {
-            childGenes[x] = leftParent.GeneticMatrix[x];
+        for (GeneColumn x = leftParent.leftmostRef.RightColumn; x != leftParentCol; x = x.RightColumn) {
+            GeneColumn temp = new GeneColumn(x);
+            childGenes.RightColumn = temp;
+            temp.LeftColumn = childGenes;
+            childGenes = temp;
         }
+
         // Copy right parent genetic code to child
-        for (int x = crossoverXPoint; x <= mutableRightIndex; x++) {
-            childGenes[x] = rightParent.GeneticMatrix[x];
+        for (GeneColumn x = rightParentCol; x != null; x = x.RightColumn) {
+            GeneColumn temp = new GeneColumn(x);
+            childGenes.RightColumn = temp;
+            temp.LeftColumn = childGenes;
+            childGenes = temp;
         }
 
-        // Copy immutable genetic region from either parent
-        for (int x = immutableLeftIndex; x <= immutableRightIndex; x++) {
-            childGenes[x] = leftParent.GeneticMatrix[x];
-        }
-
-        if (tries >= maxTries) { // Adjust genes around crossover x point.
-            for(int i = mutableLeftIndex; i < mutableRightIndex; i++) {
-                childGenes[i].GroundHeight = Mathf.Min(childGenes[i].GroundHeight, jumpLimit);
-            }
-        }
-
-        return childGenes;
+        return childLeftRef;
     }
 
-    private bool IsCrossOverXValid(int crossoverXPoint, MapIndividual leftParent, MapIndividual rightParent)
-    {
-        bool heightOK = Mathf.Abs(leftParent.GeneticMatrix[crossoverXPoint].GroundHeight - rightParent.GeneticMatrix[crossoverXPoint].GroundHeight) < jumpLimit;
-        // Maybe check for spikes and clocks too
-        return heightOK;
+    private bool IsCrossOverXValid(GeneColumn leftParent, GeneColumn rightParent) {
+        return Mathf.Abs(leftParent.GroundHeight - rightParent.GroundHeight) < jumpLimit;
     }
 
     internal void Mutate(float mutationRate)
     {
         Random r = new Random();
-        for (int x = mutableLeftIndex; x <= mutableRightIndex; x++) {
+        for (GeneColumn x = generationLeftRef; x != null; x = x.RightColumn) {
             if (r.NextDouble() < mutationRate) {
                 // Ground mutation
                 mutateGroundHeightAtX(x);
@@ -226,24 +178,22 @@ public class MapIndividual {
         }
     }
 
-    private void mutateClockAtX(int x)
+    private void mutateClockAtX(GeneColumn x)
     {
-        geneMatrix[x].HasClock = !geneMatrix[x].HasClock;
+        x.HasClock = !x.HasClock;
     }
 
-    private void mutateSpikeAtX(int x)
+    private void mutateSpikeAtX(GeneColumn x)
     {
-        geneMatrix[x].HasSpike = !geneMatrix[x].HasSpike;
+        x.HasSpike = !x.HasSpike;
     }
 
     Random random = new Random();
-    private void mutateGroundHeightAtX(int x)
+    private void mutateGroundHeightAtX(GeneColumn x)
     {   
-        var changeAbs = random.Next(1,3);
         var changeDirection = random.Next(2) == 1 ? 1 : -1;
-        var gh = groundHeightAtX(x);
-        var shift = changeDirection * changeAbs;
-        geneMatrix[x].GroundHeight += shift;
+        var shift = changeDirection;
+        x.GroundHeight += shift;
     }
 
     /*
@@ -256,73 +206,43 @@ public class MapIndividual {
             - are holes jumpable?
     */
     public void forcePlayability() {
-        int checkDirection = 1; // 1 to right, -1 to left
-        int mutableLength = mutableRightIndex - mutableLeftIndex;
-        bool partialMutation = mutableLength != GeneticWidth;
-        if (partialMutation && mutableLeftIndex == 0) // It's from right to left
-            checkDirection = -1;
-        int start = checkDirection == 1 ? mutableLeftIndex : mutableRightIndex;
-        int previousIndex = partialMutation ? start - checkDirection : start;
-        var previousObstacleHeight = obstacleHeightAtX(previousIndex);
-        int previousGroundIndex = -1; // No clear x found
-        int previousGroundHeight = -1;
-        if (!hasEnemyAtX(previousIndex))
-            previousGroundIndex = previousIndex;
-        else if (!hasEnemyAtX(start)) previousGroundIndex = start;
-        if (previousGroundIndex != -1) previousGroundHeight = groundHeightAtX(previousGroundIndex);
-        bool hadSpike = hasSpikeAtX(start);
+
         int spikeLength = 0;
-        for (var x = start; x <= mutableRightIndex && x >= mutableLeftIndex; x += checkDirection) {
+        int currentObstacleHeight = 0;
+        for (var x = generationLeftRef.RightColumn; x != generationRightRef.RightColumn; x = x.RightColumn) {
 
             // Check for unreacheable height diffs
-            var currentObstacleHeight = obstacleHeightAtX(x);
-            var obstacleDiff = currentObstacleHeight - previousObstacleHeight;
+            var obstacleDiff = x.GroundHeight - x.LeftColumn.GroundHeight;
             if (Mathf.Abs(obstacleDiff) > jumpLimit) {
-                geneMatrix[x].GroundHeight += -obstacleDiff + Mathf.Sign(obstacleDiff);
-                currentObstacleHeight = obstacleHeightAtX(x); // Update height
+                x.GroundHeight += -obstacleDiff + Mathf.Sign(obstacleDiff);
+                currentObstacleHeight = x.GroundHeight; // Update height
             }
 
-            if (previousGroundHeight != -1) {
+            if (x.LeftColumn.GroundHeight != 0) {
                 var previousGroundDistance = Mathf.Abs(previousGroundIndex - x); // Horizontal dist.
                 previousGroundDistance += Mathf.Abs(currentObstacleHeight - previousGroundHeight); // Approx. vertical dist.
 
                 if (previousGroundDistance > jumpLimit) {
-                    geneMatrix[x].GroundHeight += -(currentObstacleHeight - previousGroundHeight);
-                    currentObstacleHeight = obstacleHeightAtX(x); // Update height
+                    x.GroundHeight += -(currentObstacleHeight - x.LeftColumn.GroundHeight);
+                    currentObstacleHeight = x.GroundHeight; // Update height
                 }
             }
 
             // Check for lengthy spikes
-            bool hasSpike = hasSpikeAtX(x);
-            if (hasSpike) {
-                var obsDiff = obstacleHeightAtX(x) - previousObstacleHeight;
+            if (x.HasSpike) {
+                var obsDiff = x.GroundHeight - x.LeftColumn.GroundHeight;
                 spikeLength += 1 + obsDiff;
-                hadSpike = true;
                 if (spikeLength > maxSpikeDistance) {
                     mutateSpikeAtX(x); // This toggles spike here
                 }
             } else {
-                if (spikeLength > maxSpikeDistance || hasAHoleAtX(x)) {
-                    if (hadSpike) {
-                        mutateSpikeAtX(previousIndex); // This toggles spike here
+                if (spikeLength > maxSpikeDistance || x.GroundHeight == 0) {
+                    if (x.LeftColumn.HasSpike) {
+                        mutateSpikeAtX(x.LeftColumn); // This toggles spike here
                     }
                 }
                 spikeLength = 0;
             }
-
-            // Updates for next iteration
-            previousObstacleHeight = obstacleHeightAtX(x);
-            hadSpike = hasSpikeAtX(x);
-            previousIndex = x;
-
-            if (!hasEnemyAtX(x)) {
-                previousGroundIndex = x;
-                previousGroundHeight = groundHeightAtX(x);
-            }
-
         }
-    }
-    private bool hasEnemyAtX(int x) {
-        return hasSpikeAtX(x); // || hasCrazyEnemyAtX...
     }
 }

@@ -55,7 +55,7 @@
   <ItemGroup>
     <Compile Include="autoloads\Global.cs" />
     <Compile Include="autoloads\Debug.cs" />
-    <Compile Include="generation\BufferedMapGenerator.cs" />
+    <Compile Include="generation\BufferedGAMapGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="scenes\DebugLabel.cs" />
     <Compile Include="scenes\map_generator_test\MapGeneratorTest.cs" />

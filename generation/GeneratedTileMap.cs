@@ -5,8 +5,14 @@ public class GeneratedTileMap : TileMap
 {
     [Export]
     private int cellSize = 64;
-    public GAMapGenerator mMapGenerator = new GAMapGenerator(Global.GeneticWidth, 12, 6, Global.Population, Global.MutationRate);
-    // public MapGenerator mMapGenerator = new MapGenerator(100, 12, 10);
+    public GAMapGenerator mMapGenerator = new GAMapGenerator(
+        Global.GeneticWidth, // referenceChunkSize
+        Global.GeneticWidth, // generationChunkSize
+        12,                  // maxHeight
+        6,                   // baseXOrigin
+        Global.Population,   // populationSize
+        Global.MutationRate, // mutationRate
+        4);                  // numberOfInitialChunks
 
     public static Dictionary<char, int> TileDictionary = new Dictionary<char, int>() { 
         {'B', -1},
@@ -43,7 +49,7 @@ public class GeneratedTileMap : TileMap
         trimCells(newLeftChunkLimit);
         leftChunkLimit = newLeftChunkLimit;
         for (int i = leftChunkLimit; i < rightChunkLimit; i++) {
-            for(int j = 0; j > -mMapGenerator.Height; j--) { // Height is inverted
+            for(int j = 0; j > -mMapGenerator.MaxHeight; j--) { // Height is inverted
                 char cellCode = mMapGenerator.GetGlobalCell(i, j);
                 if (cellCode == 'C') {
                     ClockItem clock = (ClockItem) clockScene.Instance();
@@ -85,7 +91,7 @@ public class GeneratedTileMap : TileMap
             endIndex = newLeftChunkLimit - 1;
         }
         for (int i = startIndex + 1; i <= endIndex; i++) {
-            for(int j = 0; j > -mMapGenerator.Height; j--) { // Height is inverted
+            for(int j = 0; j > -mMapGenerator.MaxHeight; j--) { // Height is inverted
                 SetCell(i, j, TileDictionary['B']); // Set outer cells to blank
             }
         }

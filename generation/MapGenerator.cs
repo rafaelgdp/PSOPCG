@@ -37,21 +37,18 @@ public class MapGenerator {
     protected GeneColumn[] matrix;
     protected Random random = new Random();
     protected int floorZeroHeight = 3;
-    public MapGenerator(int width = 15, int height = 12, int globalOriginX = 0) {
+    public MapGenerator(int width = 15, int height = 12, int leftmostX = 0) {
         this.width = width;
         this.height = height;
+        this.leftmostGlobalX = leftmostX;
         this.leftmostIndex = 0;
         this.matrix = new GeneColumn[width]; // +2 is workaround for corner cases
-        for (int i = 0; i < width; i++) {
-            this.matrix[i] = new GeneColumn(3);
-        }
-        initializeMap(globalOriginX);
+        initializeMap(3, leftmostX);
     }
 
-    protected void initializeMap(int x) {
-        leftmostGlobalX = x - (Width / 2);
-        for (int i = LeftmostGlobalX; i <= RightmostGlobalX; i++) {
-            SetGlobalColumn(i, new GeneColumn(floorZeroHeight));
+    protected void initializeMap(int floorHeight, int leftmostX = 0) {
+        for (int x = LeftmostGlobalX; x <= RightmostGlobalX; x++) {
+            SetGlobalColumn(x, new GeneColumn(x, floorHeight));
         }
     }
 
@@ -126,7 +123,7 @@ public class MapGenerator {
         var floorHeight = Mathf.Abs(generatedLeftmostX);
         for (int i = generatedLeftmostX; i <= generatedRightmostX; i++) {
             floorHeight %= (Height - 7);
-            SetGlobalColumn(i, new GeneColumn(floorHeight));
+            SetGlobalColumn(i, new GeneColumn(i, floorHeight));
             floorHeight++;
         }
     }

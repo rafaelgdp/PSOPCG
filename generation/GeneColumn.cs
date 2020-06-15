@@ -11,15 +11,26 @@ public class GeneColumn {
     public bool HasClock = false;
 
     public int GlobalX = 0;
-    public int GlobalY = 0;
 
-    public GeneColumn() : this(0) {}
-    public GeneColumn(int groundHeight) {
+    public GeneColumn RightColumn = null;
+    public GeneColumn LeftColumn = null;
+
+    public GeneColumn(int gX) : this(gX, 0) {}
+
+    public GeneColumn(int gX, int groundHeight) {
+        this.GlobalX = gX;
         this.groundHeight = groundHeight;
     }
 
-    public GeneColumn(int gX, int gY, int groundHeight) {
-        
+    public GeneColumn(GeneColumn toBeCopied) {
+        this.Clone(toBeCopied);
+    }
+
+    public GeneColumn(GeneColumn left, GeneColumn right, int gX, int groundHeight = 0) {
+        this.LeftColumn = left;
+        this.RightColumn = right;
+        this.GlobalX = gX;
+        this.groundHeight = groundHeight;
     }
 
     public bool ClockPlaced = false;
@@ -40,7 +51,35 @@ public class GeneColumn {
         this.HasSpike = gc.HasSpike;
         this.HasClock = gc.HasClock;
         this.ClockPlaced = gc.ClockPlaced;
+        this.GlobalX = gc.GlobalX;
+        this.LeftColumn = gc.LeftColumn;
+        this.RightColumn = gc.RightColumn;
     }
+
+    public GeneColumn SeekNthColumn(int n) {
+        if (n == 0) return this;
+        int totalSteps = Mathf.Abs(n);
+        GeneColumn iterator = this;
+        if (n < 0) {
+            for (int i = 0; i < totalSteps; i++) {
+                iterator = iterator.LeftColumn;
+                if (iterator == null) {
+                    return null;
+                }
+            }
+            return iterator;
+        } else {
+            for (int i = 0; i < totalSteps; i++) {
+                iterator = iterator.RightColumn;
+                if (iterator == null) {
+                    return null;
+                }
+            }
+            return iterator;
+        }
+    }
+
+}
 
     public override string ToString() {
         String r = $"GroundHeight: {GroundHeight}, HasSpike: {HasSpike}, HasClock: {HasClock}.";
