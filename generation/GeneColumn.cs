@@ -41,8 +41,8 @@ public class GeneColumn {
         this.Next = next;
     }
 
-    public GeneColumn(GeneColumn left, GeneColumn right, int globalX) : this(
-        left, right, globalX,
+    public GeneColumn(int globalX, GeneColumn previous, GeneColumn next) : this(
+        previous, next, globalX,
         random.Next(0, 4), // GroundHeight
         random.Next(0, 2) == 0 ? false : true, // HasSpike
         random.Next(0, 2) == 0 ? false : true, // HasClock
@@ -77,6 +77,7 @@ public class GeneColumn {
         this.ClockPlaced = gc.ClockPlaced;
         this.GlobalX = gc.GlobalX;
         this.ClockExtraTime = gc.ClockExtraTime;
+        this.IsMutable = gc.IsMutable;
     }
 
     public GeneColumn SeekNthColumn(int n) {

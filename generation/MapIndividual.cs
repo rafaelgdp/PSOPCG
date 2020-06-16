@@ -86,6 +86,7 @@ public class MapIndividual {
                     spikeFitness -= spikeLength * spikePenalty;
                 }
             }
+            if (x == null) break;
         }
         return spikeFitness;
     }
@@ -142,6 +143,7 @@ public class MapIndividual {
         int tries = 0;
         int originalCrossoverXPoint = random.Next(leftCrossLimit, rightCrossLimit);
         int crossoverXPoint = originalCrossoverXPoint;
+        
         GeneColumn leftParentCrossPoint = leftParent.GenerationHead.SeekNthColumn(crossoverXPoint);
         GeneColumn rightParentCrossPoint = rightParent.GenerationHead.SeekNthColumn(crossoverXPoint);
 
@@ -158,22 +160,27 @@ public class MapIndividual {
             tries++;
         }
 
-        GeneColumn childHead = new GeneColumn(leftParent.Head);
-        GeneColumn childIterator = new GeneColumn(leftParent.Head.Next, childHead, null);
+        // Here we start cloning the child genes from the left parent
+        GeneColumn parentIterator = leftParent.Head; // Used to iterate over left parent
+        GeneColumn childHead = new GeneColumn(parentIterator); // This head will be returned in the end
+        GeneColumn childIterator = new GeneColumn(parentIterator.Next, childHead, null); // To actually iterate, this is used
         childHead.Next = childIterator;
-        // Copy left parent genetic code to child
-        for (childIterator = childIterator.Next; childIterator != leftParentCrossPoint; childIterator = childIterator.Next) {
-            GeneColumn temp = new GeneColumn(childIterator.Next, childIterator, null);
-            childIterator.Next = temp;
-            childIterator = temp;
+        parentIterator = parentIterator.Next; // Pointing now to the second column
+        // Now, starting from the 3rd column now, iterate until the crossover point is reached
+        for (parentIterator = parentIterator.Next; parentIterator != leftParentCrossPoint; parentIterator = parentIterator.Next) {
+            // We need to clone the parent's genes, but link to the child neighbor columns.
+            GeneColumn nextChildColumn = new GeneColumn(parentIterator, childIterator, null);
+            childIterator.Next = nextChildColumn;
+            childIterator = nextChildColumn;
         }
 
-        // Copy right parent genetic code to child
-        for (childIterator = rightParentCrossPoint; childIterator != null; childIterator = childIterator.Next) {
-            GeneColumn temp = new GeneColumn(childIterator.Next, childIterator, null);
-            childIterator.Next = temp;
-            childIterator = temp;
+        // Copy right parent genetic code to child, starting from crossover point.
+        for (parentIterator = rightParentCrossPoint; parentIterator != null; parentIterator = parentIterator.Next) {
+            GeneColumn nextChildColumn = new GeneColumn(parentIterator, childIterator, null);
+            childIterator.Next = nextChildColumn;
+            childIterator = nextChildColumn;
         }
+        // Finally, create an individual from the child genetic code!
         MapIndividual childIndividual = new MapIndividual(childHead);
         return childIndividual;
     }
@@ -185,7 +192,10 @@ public class MapIndividual {
     internal void Mutate(float mutationRate)
     {
         Random r = new Random();
-        for (GeneColumn x = GenerationHead; x != null && x.GlobalX <= GenerationTail.GlobalX; x = x.Next) {
+        for (   GeneColumn x = GenerationHead;
+                x != null && x.GlobalX <= GenerationTail.GlobalX;
+                x = x.Next
+            ) {
             if (r.NextDouble() < mutationRate) {
                 // Ground mutation
                 mutateGroundHeightAtX(x);

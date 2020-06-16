@@ -20,7 +20,7 @@ public class GAMapGenerator {
     protected int maxHeight;
     public int MaxHeight { get { return maxHeight; } }
     public int LeftmostGlobalX { get { return globalHead.GlobalX; } }
-    public int RightmostGlobalX { get { return globalHead.GlobalX; }}
+    public int RightmostGlobalX { get { return globalTail.GlobalX; }}
     public int currentGlobalX { get { return movingHead.GlobalX; }}
     protected Random random = new Random();
     protected int floorDefaultHeight = 3;
@@ -80,8 +80,9 @@ public class GAMapGenerator {
         createBaseChunkAroundX(initialOrigin);
         int numberOfChunksOnLeft = numberOfChunks / 2;
         int numberOfChunksOnRight = numberOfChunks - numberOfChunksOnLeft;
-        generateChunkOnLeft(numberOfChunksOnLeft);
-        generateChunkOnRight(numberOfChunksOnRight);
+        generateChunksOnLeft(numberOfChunksOnLeft);
+        generateChunksOnRight(numberOfChunksOnRight);
+        Debug.Log("All done?");
     }
 
     private void createBaseChunkAroundX(int initialOrigin) {
@@ -100,73 +101,160 @@ public class GAMapGenerator {
         globalTail = previousGC;
     }
 
-    private void generateChunkOnLeft(int numChunks) {
-        List<MapIndividual> population = createLeftPopulation();
+    private void generateChunksOnLeft(int numChunks) {
 
-        // Evolve over generations
-        int numberOfChildren = (int) ((1 - elitism) * (float) population.Count);
-        MapIndividual[] children = new MapIndividual[numberOfChildren];
+        for (int chunkIndex = 0; chunkIndex < numChunks; chunkIndex++) {
+            List<MapIndividual> population = createLeftPopulation();
 
-        for (int i = 0; i < maxIterations; i++) {
+            // Evolve over generations
+            int numberOfChildren = (int) ((1 - elitism) * (float) population.Count);
+            MapIndividual[] children = new MapIndividual[numberOfChildren];
 
-            Debug.Log($"Iteration {i}\n");
+            for (int i = 0; i < maxIterations; i++) {
 
-            // Sort population
-            population.Sort((x, y) => x.Fitness.CompareTo(y.Fitness));
+                Debug.Log($"Iteration {i}\n");
+
+                // Sort population
+                population.Sort((x, y) => x.Fitness.CompareTo(y.Fitness));
+                
+                // Crossover
+                for (int ci = 0; ci < numberOfChildren; ci++) {
+                    // Pick parents
+                    var parent1 = pickParentFromPopulation(population);
+                    var parent2 = pickParentFromPopulation(population);
+                    // Crossover parents
+                    MapIndividual newChild = crossover(parent1, parent2);
+                    children[ci] = newChild;
+                }
+
+                for (int ci = 0; ci < numberOfChildren; ci++) {
+                    population[ci] = children[ci];
+                }
+
+                // Mutation
+                mutatePopulation(population);
+            }
+
+            // Update world matrix with best individual
+            MapIndividual bestIndividual = population[0];
+            foreach (MapIndividual individual in population) {
+                if (individual.GetFitness() > bestIndividual.GetFitness()) {
+                    bestIndividual = individual;
+                }
+            }
+
+            // Force playability of individual
+            //bestIndividual.forcePlayability();
+
+            // Make best individual genes unmutable
+            for (GeneColumn iterator = bestIndividual.GenerationHead;
+                iterator != null && iterator.IsMutable;
+                iterator = iterator.Next) {
+                    iterator.IsMutable = false;
+            }
+
+            globalHead.Previous = bestIndividual.GenerationTail;
+            bestIndividual.GenerationTail.Next = globalHead;
+            globalHead = bestIndividual.GenerationHead;
+        }
+    }
+
+    private void generateChunksOnRight(int numChunks) {
+
+        for (int chunkIndex = 0; chunkIndex < numChunks; chunkIndex++) {
             
-            // Crossover
-            for (int ci = 0; ci < numberOfChildren; ci++) {
-                // Pick parents
-                var parent1 = pickParentFromPopulation(population);
-                var parent2 = pickParentFromPopulation(population);
-                // Crossover parents
-                MapIndividual newChild = crossover(parent1, parent2);
-                children[ci] = newChild;
+            List<MapIndividual> population = createRightPopulation();
+
+            // Evolve over generations
+            int numberOfChildren = (int) ((1 - elitism) * (float) population.Count);
+            MapIndividual[] children = new MapIndividual[numberOfChildren];
+
+            for (int i = 0; i < maxIterations; i++) {
+
+                Debug.Log($"Iteration {i}\n");
+
+                // Sort population
+                population.Sort((x, y) => x.Fitness.CompareTo(y.Fitness));
+                
+                // Crossover
+                for (int ci = 0; ci < numberOfChildren; ci++) {
+                    // Pick parents
+                    var parent1 = pickParentFromPopulation(population);
+                    var parent2 = pickParentFromPopulation(population);
+                    // Crossover parents
+                    MapIndividual newChild = crossover(parent1, parent2);
+                    children[ci] = newChild;
+                }
+
+                for (int ci = 0; ci < numberOfChildren; ci++) {
+                    population[ci] = children[ci];
+                }
+
+                // Mutation
+                mutatePopulation(population);
             }
 
-            for (int ci = 0; ci < numberOfChildren; ci++) {
-                population[ci] = children[ci];
+            // Update world matrix with best individual
+            MapIndividual bestIndividual = population[0];
+            foreach (MapIndividual individual in population) {
+                if (individual.GetFitness() > bestIndividual.GetFitness()) {
+                    bestIndividual = individual;
+                }
             }
 
-            // Mutation
-            mutatePopulation(population);
+            // Force playability of individual
+            //bestIndividual.forcePlayability();
+
+            // Make best individual genes unmutable
+            for (GeneColumn iterator = bestIndividual.GenerationHead;
+                iterator != null && iterator.IsMutable;
+                iterator = iterator.Next) {
+                    iterator.IsMutable = false;
+            }
+
+            globalTail.Next = bestIndividual.GenerationHead;
+            bestIndividual.GenerationHead.Previous = globalTail;
+            globalTail = bestIndividual.GenerationTail;
         }
-
-        // Update world matrix with best individual
-        MapIndividual bestIndividual = population[0];
-        foreach (MapIndividual individual in population) {
-            if (individual.GetFitness() > bestIndividual.GetFitness()) {
-                bestIndividual = individual;
-            }
-        }
-
-        // Force playability of individual
-        //bestIndividual.forcePlayability();
-
-        globalHead.Previous = bestIndividual.GenerationTail;
-        bestIndividual.GenerationTail.Next = globalHead;
-        globalHead = bestIndividual.GenerationHead;
-
     }
 
     private GeneColumn getLeftReferenceChunkClone() {
-        GeneColumn referenceHead = new GeneColumn(globalHead);
-        GeneColumn iterator = new GeneColumn(referenceHead.Next);
-        referenceHead.Previous = null;
-        referenceHead.Next = iterator;
-        iterator.Previous = referenceHead;
+        GeneColumn globalReferenceIterator = globalHead;
+        GeneColumn referenceHead = new GeneColumn(globalReferenceIterator);
+        GeneColumn referenceCloneIterator = new GeneColumn(globalReferenceIterator.Next, referenceHead, null);
+        referenceHead.Next = referenceCloneIterator;
+        globalReferenceIterator = globalReferenceIterator.Next;
         for (int i = 0; i < referenceChunkSize - 1; i++) {
-            if (iterator.Next == null) {
+            if (globalReferenceIterator == null) {
                 break;
             }
-            GeneColumn temp = new GeneColumn(iterator.Next);
-            temp.Previous = iterator;
-            iterator.Next = temp;
-            iterator = temp;
+            GeneColumn nextColumn = new GeneColumn(globalReferenceIterator, referenceCloneIterator, null);
+            referenceCloneIterator.Next = nextColumn;
+            referenceCloneIterator = nextColumn;
+            globalReferenceIterator = globalReferenceIterator.Next;
         }
-        iterator.Next = null;
         return referenceHead;
     }
+
+    private GeneColumn getRightReferenceChunkClone() {
+        // On the right reference clone, we start from the global tail
+        GeneColumn globalReferenceIterator = globalTail;
+        GeneColumn referenceTail = new GeneColumn(globalReferenceIterator);
+        GeneColumn referenceCloneIterator = new GeneColumn(globalReferenceIterator.Previous, null, referenceTail);
+        referenceTail.Previous = referenceCloneIterator;
+        globalReferenceIterator = globalReferenceIterator.Previous;
+        for (int i = 0; i < referenceChunkSize - 1; i++) {
+            if (globalReferenceIterator == null) {
+                break;
+            }
+            GeneColumn previousColumn = new GeneColumn(globalReferenceIterator, null, referenceCloneIterator);
+            referenceCloneIterator.Previous = previousColumn;
+            referenceCloneIterator = previousColumn;
+            globalReferenceIterator = globalReferenceIterator.Previous;
+        }
+        return referenceTail;
+    }
+
     private List<MapIndividual> createLeftPopulation() {
         List<MapIndividual> population = new List<MapIndividual>(populationSize);
         for (int i = 0; i < populationSize; i++) {
@@ -177,21 +265,40 @@ public class GAMapGenerator {
         return population;
     }
 
-    private GeneColumn getRandomGenerationChunkOnLeftAndLink(GeneColumn referenceHead) {
-        GeneColumn tail = new GeneColumn(null, referenceHead, referenceHead.GlobalX - 1);
-        GeneColumn head = new GeneColumn(null, tail, tail.GlobalX - 1);
-        referenceHead.Previous = tail; // Linking new reference chunk with this chunk
-        tail.Previous = head;
-        for (int i = 1; i < generationChunkSize; i++) {
-            GeneColumn temp = new GeneColumn(null, head, head.GlobalX - 1);
-            head.Previous = temp;
-            head = temp;
+    private List<MapIndividual> createRightPopulation() {
+        List<MapIndividual> population = new List<MapIndividual>(populationSize);
+        for (int i = 0; i < populationSize; i++) {
+            GeneColumn referenceTail = getRightReferenceChunkClone();
+            GeneColumn referenceHead = referenceTail;
+            while (referenceHead.Previous != null) { referenceHead = referenceHead.Previous; }
+            GeneColumn generationTail = getRandomGenerationChunkOnRightAndLink(referenceTail);
+            population.Add(new MapIndividual(referenceHead, referenceTail.Next, generationTail, false));
         }
-        return head;
+        return population;
     }
 
-    private void generateChunkOnRight(int numChunks) {
-        // TODO
+    private GeneColumn getRandomGenerationChunkOnLeftAndLink(GeneColumn referenceHead) {
+        // Creating generation tail and linking to reference head
+        GeneColumn generationIterator = new GeneColumn(referenceHead.GlobalX - 1, null, referenceHead);
+        referenceHead.Previous = generationIterator;
+        for (int i = 1; i < generationChunkSize; i++) {
+            GeneColumn generationPreviousColumn = new GeneColumn(generationIterator.GlobalX - 1, null, generationIterator);
+            generationIterator.Previous = generationPreviousColumn;
+            generationIterator = generationPreviousColumn;
+        }
+        return generationIterator; // generation chunk head
+    }
+
+    private GeneColumn getRandomGenerationChunkOnRightAndLink(GeneColumn referenceTail) {
+        // Creating generation head and linking to reference tail
+        GeneColumn generationIterator = new GeneColumn(referenceTail.GlobalX + 1, referenceTail, null);
+        referenceTail.Next = generationIterator;
+        for (int i = 1; i < generationChunkSize; i++) {
+            GeneColumn generationNextColumn = new GeneColumn(generationIterator.GlobalX + 1, generationIterator, null);
+            generationIterator.Next = generationNextColumn;
+            generationIterator = generationNextColumn;
+        }
+        return generationIterator; // generation chunk tail
     }
 
     private GeneColumn getRightReferenceChunk() {
@@ -215,11 +322,11 @@ public class GAMapGenerator {
         if (CurrentChunkHead != null) {
             if (CurrentChunkHead.GlobalX >= leftChunkLimit) {
                 while(CurrentChunkHead.GlobalX != leftChunkLimit) {
-                    CurrentChunkHead = CurrentChunkHead.Next;
+                    CurrentChunkHead = CurrentChunkHead.Previous;
                 }
             } else {
                 while(CurrentChunkHead.GlobalX != leftChunkLimit) {
-                    CurrentChunkHead = CurrentChunkHead.Previous;
+                    CurrentChunkHead = CurrentChunkHead.Next;
                 }
             }
         } else {
@@ -232,11 +339,11 @@ public class GAMapGenerator {
         if (CurrentChunkTail != null) {
             if (CurrentChunkTail.GlobalX >= rightChunkLimit) {
                 while(CurrentChunkTail.GlobalX != rightChunkLimit) {
-                    CurrentChunkTail = CurrentChunkHead.Next;
+                    CurrentChunkTail = CurrentChunkTail.Previous;
                 }
             } else {
                 while(CurrentChunkTail.GlobalX != rightChunkLimit) {
-                    CurrentChunkTail = CurrentChunkHead.Previous;
+                    CurrentChunkTail = CurrentChunkTail.Next;
                 }
             }
         } else {

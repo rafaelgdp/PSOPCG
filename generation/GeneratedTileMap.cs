@@ -12,7 +12,7 @@ public class GeneratedTileMap : TileMap
         6,                   // baseXOrigin
         Global.Population,   // populationSize
         Global.MutationRate, // mutationRate
-        4);                  // numberOfInitialChunks
+        5);                  // numberOfInitialChunks
 
     public static Dictionary<char, int> TileDictionary = new Dictionary<char, int>() { 
         {'B', -1},

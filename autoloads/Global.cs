@@ -9,7 +9,7 @@ public class Global : Node
     public static int Population = 30;
     public static int TilePixelWidth = 64;
     public static float PlayerMaxSpeed = 500F;
-    private static int renderWidth = 20;
+    private static int renderWidth = 50;
     public static int RenderWidth {
         get { return renderWidth; }
         set {
@@ -17,7 +17,7 @@ public class Global : Node
             renderWidth = value;
         }
     }
-    private static int geneticWidth = 10;
+    private static int geneticWidth = 100;
     public static int GeneticWidth {
         get { return geneticWidth; }
         set {
