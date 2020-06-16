@@ -2,6 +2,8 @@ using System;
 using Godot;
 
 public class GeneColumn {
+    private static long uid = 0;
+    private long myuid = uid++;
     int groundHeight = 0;
     public int GroundHeight {
         get { return groundHeight + (HasSpike ? 1 : 0); }
@@ -9,28 +11,50 @@ public class GeneColumn {
         }
     public bool HasSpike = false;
     public bool HasClock = false;
+    private float clockExtraTime = 5F;
+    public float ClockExtraTime {
+        set { value = Mathf.Clamp(value, 2F, 10F); }
+        get { 
+                if (HasClock) {
+                    return clockExtraTime;
+                } else {
+                    return 0F;
+                }
+            }
+    }
+
+    public bool IsMutable = true;
 
     public int GlobalX = 0;
 
-    public GeneColumn RightColumn = null;
-    public GeneColumn LeftColumn = null;
+    public GeneColumn Next = null;
+    public GeneColumn Previous = null;
 
-    public GeneColumn(int gX) : this(gX, 0) {}
-
-    public GeneColumn(int gX, int groundHeight) {
-        this.GlobalX = gX;
-        this.groundHeight = groundHeight;
-    }
+    private static Random random = new Random();
 
     public GeneColumn(GeneColumn toBeCopied) {
         this.Clone(toBeCopied);
     }
 
-    public GeneColumn(GeneColumn left, GeneColumn right, int gX, int groundHeight = 0) {
-        this.LeftColumn = left;
-        this.RightColumn = right;
-        this.GlobalX = gX;
-        this.groundHeight = groundHeight;
+    public GeneColumn(GeneColumn toBeCopied, GeneColumn previous, GeneColumn next) : this(toBeCopied) {
+        this.Previous = previous;
+        this.Next = next;
+    }
+
+    public GeneColumn(GeneColumn left, GeneColumn right, int globalX) : this(
+        left, right, globalX,
+        random.Next(0, 4), // GroundHeight
+        random.Next(0, 2) == 0 ? false : true, // HasSpike
+        random.Next(0, 2) == 0 ? false : true, // HasClock
+        true // is mutable
+    ) {}
+
+    public GeneColumn(GeneColumn left, GeneColumn right, int globalX, int groundHeight, bool hasSpike, bool hasClock, bool isMutable) {
+        this.Previous = left;
+        this.Next = right;
+        this.GlobalX = globalX;
+        this.GroundHeight = groundHeight;
+        this.IsMutable = isMutable;
     }
 
     public bool ClockPlaced = false;
@@ -52,8 +76,7 @@ public class GeneColumn {
         this.HasClock = gc.HasClock;
         this.ClockPlaced = gc.ClockPlaced;
         this.GlobalX = gc.GlobalX;
-        this.LeftColumn = gc.LeftColumn;
-        this.RightColumn = gc.RightColumn;
+        this.ClockExtraTime = gc.ClockExtraTime;
     }
 
     public GeneColumn SeekNthColumn(int n) {
@@ -62,7 +85,7 @@ public class GeneColumn {
         GeneColumn iterator = this;
         if (n < 0) {
             for (int i = 0; i < totalSteps; i++) {
-                iterator = iterator.LeftColumn;
+                iterator = iterator.Previous;
                 if (iterator == null) {
                     return null;
                 }
@@ -70,7 +93,7 @@ public class GeneColumn {
             return iterator;
         } else {
             for (int i = 0; i < totalSteps; i++) {
-                iterator = iterator.RightColumn;
+                iterator = iterator.Next;
                 if (iterator == null) {
                     return null;
                 }
@@ -79,10 +102,8 @@ public class GeneColumn {
         }
     }
 
-}
-
     public override string ToString() {
-        String r = $"GroundHeight: {GroundHeight}, HasSpike: {HasSpike}, HasClock: {HasClock}.";
+        String r = $"gX: {GlobalX}, uid: {myuid}, GroundHeight: {GroundHeight}, HasSpike: {HasSpike}, HasClock: {HasClock}, ClockExtraTime: {ClockExtraTime}.";
         return r;
     }
 }

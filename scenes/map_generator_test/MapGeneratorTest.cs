@@ -54,11 +54,11 @@ public class MapGeneratorTest : Node2D
     private void CheckWorldUpdate() {
         var mappedPlayerPosX = (int) tilemap.WorldToMap(player.GlobalPosition).x;
         
-        if (mappedPlayerPosX < (tilemap.mMapGenerator.LeftmostGlobalX + generationToleranceOffset) ||
-            mappedPlayerPosX > (tilemap.mMapGenerator.RightmostGlobalX - generationToleranceOffset)) {
-            // TODO: Possibly make signals for these
-            tilemap.mMapGenerator.RegenerateChunkCenteredAt(mappedPlayerPosX);
-        }
+        // if (mappedPlayerPosX < (tilemap.mMapGenerator.LeftmostGlobalX + generationToleranceOffset) ||
+        //     mappedPlayerPosX > (tilemap.mMapGenerator.RightmostGlobalX - generationToleranceOffset)) {
+        //     // TODO: Possibly make signals for these
+        //     tilemap.mMapGenerator.RegenerateChunkCenteredAt(mappedPlayerPosX);
+        // }
 
         if (mappedPlayerPosX < (tilemap.LeftmostGlobalX + renderToleranceOffset) ||
             mappedPlayerPosX > (tilemap.RightmostGlobalX - renderToleranceOffset)) {

@@ -55,7 +55,6 @@
   <ItemGroup>
     <Compile Include="autoloads\Global.cs" />
     <Compile Include="autoloads\Debug.cs" />
-    <Compile Include="generation\BufferedGAMapGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="scenes\DebugLabel.cs" />
     <Compile Include="scenes\map_generator_test\MapGeneratorTest.cs" />
@@ -65,7 +64,6 @@
     <Compile Include="scenes\tilemap\CellXLabel.cs" />
     <Compile Include="scenes\ui\TimeLeftRTL.cs" />
     <Compile Include="generation\GeneratedTileMap.cs" />
-    <Compile Include="generation\MapGenerator.cs" />
     <Compile Include="generation\GAMapGenerator.cs" />
     <Compile Include="generation\MapIndividual.cs" />
     <Compile Include="generation\GeneColumn.cs" />

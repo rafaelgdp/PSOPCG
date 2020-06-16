@@ -48,24 +48,30 @@ public class GeneratedTileMap : TileMap
         var newLeftChunkLimit = x - (int) (renderChunkWidth / 2);
         trimCells(newLeftChunkLimit);
         leftChunkLimit = newLeftChunkLimit;
-        for (int i = leftChunkLimit; i < rightChunkLimit; i++) {
+        mMapGenerator.SetCurrentChunkHead(leftChunkLimit);
+        mMapGenerator.SetCurrentChunkTail(rightChunkLimit);
+        
+        for (   GeneColumn iterator = mMapGenerator.CurrentChunkHead;
+                iterator != mMapGenerator.CurrentChunkTail.Next;
+                iterator = iterator.Next) {
+            
             for(int j = 0; j > -mMapGenerator.MaxHeight; j--) { // Height is inverted
-                char cellCode = mMapGenerator.GetGlobalCell(i, j);
+                char cellCode = iterator.CellAtY(j);
                 if (cellCode == 'C') {
                     ClockItem clock = (ClockItem) clockScene.Instance();
-                    clock.GlobalPosition = MapToWorld(new Vector2(i, j)) + (new Vector2(32F, 32F));
+                    clock.GlobalPosition = MapToWorld(new Vector2(iterator.GlobalX, j)) + (new Vector2(32F, 32F));
                     AddChild(clock);
-                    mMapGenerator.GetGlobalColumn(i).ClockPlaced = true;
+                    iterator.ClockPlaced = true;
                     break; // Not necessary to preceed
                 } else {
-                    SetCell(i, j, tileFromCode(cellCode));
+                    SetCell(iterator.GlobalX, j, tileFromCode(cellCode));
                 }
             }
-            if (i % 10 == 0 && !placedXLabels.Contains(i)) {
+            if (iterator.GlobalX % 10 == 0 && !placedXLabels.Contains(iterator.GlobalX)) {
                 // Place a Global X Label
                 CellXLabel xlabel = (CellXLabel) cellXLabelScene.Instance();
-                xlabel.GlobalX = i;
-                xlabel.GlobalPosition = MapToWorld(new Vector2(i, -9)) + (new Vector2(32F, 32F));
+                xlabel.GlobalX = iterator.GlobalX;
+                xlabel.GlobalPosition = MapToWorld(new Vector2(iterator.GlobalX, -9)) + (new Vector2(32F, 32F));
                 AddChild(xlabel);
             }
         }

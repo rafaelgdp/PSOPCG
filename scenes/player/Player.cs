@@ -9,7 +9,7 @@ public class Player : KinematicBody2D
     public delegate void PlayerExitedScreen();
 
     [Export]
-    float maxSpeed = 500F;
+    public float MaxSpeed = Global.PlayerMaxSpeed;
 
     [Export]
     float minSpeed = 10F;
@@ -119,7 +119,7 @@ public class Player : KinematicBody2D
         frameMotion.y += Global.Gravity * delta;
         
         motion += frameMotion;
-        motion.x = Mathf.Clamp(motion.x, -maxSpeed, maxSpeed);
+        motion.x = Mathf.Clamp(motion.x, -MaxSpeed, MaxSpeed);
         motion.y = Mathf.Clamp(motion.y, -Mathf.Abs(jumpForce), Mathf.Abs(jumpForce));
         
         HandleAnimation(frameMotion.x);
@@ -145,7 +145,7 @@ public class Player : KinematicBody2D
         }
 
         if (FallingEnabled == false) {
-            motion.y = (Input.GetActionStrength("ui_down") - Input.GetActionStrength("ui_up")) * maxSpeed;
+            motion.y = (Input.GetActionStrength("ui_down") - Input.GetActionStrength("ui_up")) * MaxSpeed;
         }
 
     }
