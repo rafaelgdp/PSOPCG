@@ -12,7 +12,7 @@ public class GeneratedTileMap : TileMap
         0,                   // baseXOrigin
         Global.Population,   // populationSize
         Global.MutationRate, // mutationRate
-        4);                  // numberOfInitialChunks
+        10);                  // numberOfInitialChunks
 
     public static Dictionary<char, int> TileDictionary = new Dictionary<char, int>() { 
         {'B', -1},
@@ -40,7 +40,7 @@ public class GeneratedTileMap : TileMap
     public override void _Ready() {
         clockScene = (PackedScene) GD.Load("res://scenes/powerups/ClockItem.tscn");
         cellXLabelScene = (PackedScene) GD.Load("res://scenes/tilemap/CellXLabel.tscn");
-        UpdateWorldAroundX(10);
+        UpdateWorldAroundX(0);
     }
 
     public void UpdateWorldAroundX(int x) {
@@ -105,7 +105,7 @@ public class GeneratedTileMap : TileMap
             startIndex = leftChunkLimit;
             endIndex = newLeftChunkLimit - 1;
         }
-        for (int i = startIndex + 1; i <= endIndex; i++) {
+        for (int i = startIndex; i <= endIndex; i++) {
             for(int j = 0; j > -mMapGenerator.MaxHeight; j--) { // Height is inverted
                 SetCell(i, j, TileDictionary['B']); // Set outer cells to blank
             }

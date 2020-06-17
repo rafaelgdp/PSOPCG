@@ -13,8 +13,8 @@ public class Global : Node
     public static int RenderWidth {
         get { return renderWidth; }
         set {
-            geneticWidth = value * 2;
-            renderWidth = value;
+            // TODO: Adjust render width with window size.
+            renderWidth = 60;
         }
     }
     private static int geneticWidth = 30;
@@ -22,7 +22,6 @@ public class Global : Node
         get { return geneticWidth; }
         set {
             geneticWidth = value;
-            renderWidth = value / 2;
         }
     }
 

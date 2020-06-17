@@ -69,7 +69,7 @@ public class GAMapGenerator {
     public GAMapGenerator(  int referenceChunkSize, int generationChunkSize,
                             int maxHeight, int initialOrigin,
                             int populationSize = 100, float mutationRate = 0.05F,
-                            int numberOfChunks = 4
+                            int numberOfChunks = 10
                         ) {
         this.referenceChunkSize = referenceChunkSize;
         this.generationChunkSize = generationChunkSize;

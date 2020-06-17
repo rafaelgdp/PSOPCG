@@ -55,8 +55,8 @@ public class MapGeneratorTest : Node2D
     private void CheckWorldUpdate() {
         var mappedPlayerPosX = (int) tilemap.WorldToMap(player.GlobalPosition).x;
         
-        if ((mappedPlayerPosX < (tilemap.mMapGenerator.LeftmostGlobalX + generationToleranceOffset))
-            && !Global.IsLeftGenBusy) {
+        if (!Global.IsLeftGenBusy &&
+            (mappedPlayerPosX < (tilemap.mMapGenerator.LeftmostGlobalX + generationToleranceOffset))) {
                 Global.IsLeftGenBusy = true;
                 Task.Factory.StartNew(() => {
                     tilemap.mMapGenerator.GenerateChunksOnLeft(2);
@@ -64,8 +64,8 @@ public class MapGeneratorTest : Node2D
                 });
         }
 
-        if ((mappedPlayerPosX > (tilemap.mMapGenerator.RightmostGlobalX - generationToleranceOffset))
-            && !Global.IsRightGenBusy) {
+        if (!Global.IsRightGenBusy &&
+            (mappedPlayerPosX > (tilemap.mMapGenerator.RightmostGlobalX - generationToleranceOffset))) {
                 Global.IsRightGenBusy = true;
                 Task.Factory.StartNew(() => {
                     tilemap.mMapGenerator.GenerateChunksOnRight(2);
