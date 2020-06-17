@@ -70,7 +70,7 @@ public class GeneratedTileMap : TileMap
                         clock.SourceGeneColumn = iterator;
                         AddChild(clock);
                         iterator.ClockPlaced = true;
-                        break; // Not necessary to preceed
+                        break; // Not necessary to proceed
                     } else {
                         SetCell(iterator.GlobalX, j, tileFromCode(cellCode));
                     }

@@ -62,6 +62,13 @@ public class GeneColumn {
                 }
             }
     }
+    private int idealClockPosition { 
+        get {
+            if (Previous == null || Next == null || (Previous.ObstacleHeight < ObstacleHeight && Next.ObstacleHeight < ObstacleHeight))
+                return ObstacleHeight;
+            return Mathf.Max(Previous.ObstacleHeight, Next.ObstacleHeight);
+        }
+    }
 
     public bool IsMutable = true;
 
@@ -103,10 +110,8 @@ public class GeneColumn {
         y = Mathf.Abs(y);
         if (y < GroundHeight) return 'G';
         if (HasSpike && y == GroundHeight) return 'S';
-        if  (HasClock &&
-            ((y == GroundHeight && !HasSpike) ||
-            (y == GroundHeight + 1 && HasSpike)))
-                return ClockPlaced ? 'c' : 'C';
+        if (HasClock && y == idealClockPosition)
+            return ClockPlaced ? 'c' : 'C';
         return 'B';
     }
 
