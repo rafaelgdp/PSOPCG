@@ -6,14 +6,54 @@ public class GeneColumn {
     private long myuid = uid++;
     int groundHeight = 0;
     public int GroundHeight {
-        get { return groundHeight + (HasSpike ? 1 : 0); }
+        get { return groundHeight; }
         set { groundHeight = Mathf.Clamp(value, 0, 12); }
+    }
+
+    public int ObstacleHeight {
+        get {
+            if (GroundHeight == 0) {
+                return 0;
+            } else {
+                return GroundHeight + (HasSpike ? 1 : 0);
+            }
         }
-    public bool HasSpike = false;
-    public bool HasClock = false;
+    }
+    private bool hasSpike = false;
+    public bool HasSpike {
+        get{
+            if (GroundHeight == 0) return false;
+            return hasSpike;
+        }
+        set{
+            if (GroundHeight == 0 && value == !HasSpike) {
+                // Possibly trying to mutate with masked HasSpike
+                // So I force an internal toggle
+                hasSpike = !hasSpike;
+            } else {
+                hasSpike = value;
+            }
+        }
+    }
+    private bool hasClock = false;
+    public bool HasClock {
+        get{
+            if (GroundHeight == 0) return false;
+            return hasClock;
+        }
+        set{
+            if (GroundHeight == 0 && value == !HasClock) {
+                // Possibly trying to mutate with masked HasSpike
+                // So I force an internal toggle
+                hasClock = !hasClock;
+            } else {
+                hasClock = value;
+            }
+        }
+    }
     private float clockExtraTime = 5F;
     public float ClockExtraTime {
-        set { value = Mathf.Clamp(value, 2F, 10F); }
+        set { clockExtraTime = Mathf.Clamp(value, 2F, 10F); }
         get { 
                 if (HasClock) {
                     return clockExtraTime;
@@ -60,12 +100,12 @@ public class GeneColumn {
     public bool ClockPlaced = false;
 
     internal char CellAtY(int y) {
-        int localY = Mathf.Abs(y);
-        if (localY < GroundHeight) return 'G';
-        if (HasSpike && localY == GroundHeight) return 'S';
+        y = Mathf.Abs(y);
+        if (y < GroundHeight) return 'G';
+        if (HasSpike && y == GroundHeight) return 'S';
         if  (HasClock &&
-            ((localY == GroundHeight && !HasSpike) ||
-            (localY == GroundHeight + 1 && HasSpike)))
+            ((y == GroundHeight && !HasSpike) ||
+            (y == GroundHeight + 1 && HasSpike)))
                 return ClockPlaced ? 'c' : 'C';
         return 'B';
     }

@@ -6,7 +6,7 @@ public class MapGeneratorTest : Node2D
     public delegate void TimeLeftUpdated(float timeLeft);
 
     Player player;
-    GeneratedTileMap tilemap;
+    public GeneratedTileMap tilemap;
     RichTextLabel debugLabel;
 
     int generationToleranceOffset = 10;
@@ -33,7 +33,7 @@ public class MapGeneratorTest : Node2D
         player = GetNode<Player>("Player");
         tilemap = GetNode<GeneratedTileMap>("GeneratedTileMap");
         debugLabel = GetNode<RichTextLabel>("DebugUI/DebugLabel");
-        generationToleranceOffset = Global.GeneticWidth / 4; // 25% offset tolerance 
+        generationToleranceOffset = Global.GeneticWidth;
         renderToleranceOffset = Global.RenderWidth / 4; // 25% offset tolerance 
     }
 
@@ -54,11 +54,12 @@ public class MapGeneratorTest : Node2D
     private void CheckWorldUpdate() {
         var mappedPlayerPosX = (int) tilemap.WorldToMap(player.GlobalPosition).x;
         
-        // if (mappedPlayerPosX < (tilemap.mMapGenerator.LeftmostGlobalX + generationToleranceOffset) ||
-        //     mappedPlayerPosX > (tilemap.mMapGenerator.RightmostGlobalX - generationToleranceOffset)) {
-        //     // TODO: Possibly make signals for these
-        //     tilemap.mMapGenerator.RegenerateChunkCenteredAt(mappedPlayerPosX);
-        // }
+        if (mappedPlayerPosX < (tilemap.mMapGenerator.LeftmostGlobalX + generationToleranceOffset)) {
+            tilemap.mMapGenerator.GenerateChunksOnLeft(2);
+        }
+        if (mappedPlayerPosX > (tilemap.mMapGenerator.RightmostGlobalX - generationToleranceOffset)) {
+            tilemap.mMapGenerator.GenerateChunksOnRight(2);
+        }
 
         if (mappedPlayerPosX < (tilemap.LeftmostGlobalX + renderToleranceOffset) ||
             mappedPlayerPosX > (tilemap.RightmostGlobalX - renderToleranceOffset)) {

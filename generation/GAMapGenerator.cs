@@ -77,23 +77,23 @@ public class GAMapGenerator {
         this.mutationRate = mutationRate;
         this.maxIterations = Global.MaxIterations;
         this.maxHeight = maxHeight;
-        createBaseChunkAroundX(initialOrigin);
+        createBaseChunkAroundX(initialOrigin, 5);
         int numberOfChunksOnLeft = numberOfChunks / 2;
         int numberOfChunksOnRight = numberOfChunks - numberOfChunksOnLeft;
-        generateChunksOnLeft(numberOfChunksOnLeft);
-        generateChunksOnRight(numberOfChunksOnRight);
+        GenerateChunksOnLeft(numberOfChunksOnLeft);
+        GenerateChunksOnRight(numberOfChunksOnRight);
         Debug.Log("All done?");
     }
 
-    private void createBaseChunkAroundX(int initialOrigin) {
+    private void createBaseChunkAroundX(int initialOrigin, int baseChunkSize) {
         // Here, we are initializing the first base reference chunk
         // TODO: add a GA generation for this chunk. For now, it's static.
-        var chunkLeftmostX = initialOrigin - referenceChunkSize / 2;
+        var chunkLeftmostX = initialOrigin - baseChunkSize / 2;
         var currentX = chunkLeftmostX;
         GeneColumn previousGC = new GeneColumn(null, null, currentX, 3, false, false, false);
         this.movingHead = previousGC;
         this.globalHead = previousGC;
-        for (++currentX; currentX < (this.LeftmostGlobalX + referenceChunkSize); currentX++) {
+        for (++currentX; currentX < (this.LeftmostGlobalX + baseChunkSize); currentX++) {
             GeneColumn currentGC = new GeneColumn(previousGC, null, currentX, 3, false, false, false);
             previousGC.Next = currentGC;
             previousGC = currentGC;
@@ -101,7 +101,7 @@ public class GAMapGenerator {
         globalTail = previousGC;
     }
 
-    private void generateChunksOnLeft(int numChunks) {
+    public void GenerateChunksOnLeft(int numChunks) {
 
         for (int chunkIndex = 0; chunkIndex < numChunks; chunkIndex++) {
             List<MapIndividual> population = createLeftPopulation();
@@ -159,7 +159,7 @@ public class GAMapGenerator {
         }
     }
 
-    private void generateChunksOnRight(int numChunks) {
+    public void GenerateChunksOnRight(int numChunks) {
 
         for (int chunkIndex = 0; chunkIndex < numChunks; chunkIndex++) {
             
@@ -386,7 +386,7 @@ public class GAMapGenerator {
         // Actual tiles
         for(int j = MaxHeight - 1; j >= 0; j--) {
             r += $"{j,6:000000}: ";
-            for (GeneColumn iterator = CurrentChunkHead; iterator != CurrentChunkTail; iterator = iterator.Next) {
+            for (GeneColumn iterator = CurrentChunkHead; iterator != CurrentChunkTail.Next; iterator = iterator.Next) {
                 switch(iterator.CellAtY(j)) {
                     case 'G':
                         r += "[color=gray]";
@@ -413,11 +413,21 @@ public class GAMapGenerator {
 
         // Global X coordinates
         int digitosLargura = 4;
+        int playerX = Global.MappedPlayerX;
         for (int digito = 0; digito < digitosLargura; digito++) {
             r += "        ";
-            for (GeneColumn iterator = CurrentChunkHead; iterator != CurrentChunkTail; iterator = iterator.Next) {
-                var xs = $"{iterator.GlobalX,4:0000}";
-                r += "[color=lime]";
+            for (GeneColumn iterator = CurrentChunkHead; iterator != CurrentChunkTail.Next; iterator = iterator.Next) {
+                var gX = iterator.GlobalX;
+                string color;
+                if (gX == playerX) {
+                    color = "yellow";
+                } else if(gX < 0) {
+                    color = "purple";
+                } else {
+                    color = "lime";
+                }
+                var xs = $"{Mathf.Abs(gX),4:0000}";
+                r += $"[color={color}]";
                 r += xs[digito];
                 r += "[/color]";
             }

@@ -9,10 +9,10 @@ public class GeneratedTileMap : TileMap
         Global.GeneticWidth, // referenceChunkSize
         Global.GeneticWidth, // generationChunkSize
         12,                  // maxHeight
-        6,                   // baseXOrigin
+        0,                   // baseXOrigin
         Global.Population,   // populationSize
         Global.MutationRate, // mutationRate
-        5);                  // numberOfInitialChunks
+        4);                  // numberOfInitialChunks
 
     public static Dictionary<char, int> TileDictionary = new Dictionary<char, int>() { 
         {'B', -1},
@@ -25,7 +25,7 @@ public class GeneratedTileMap : TileMap
 
     // The clock is a special tile.
     // 'C' denotes an unplaced clock.
-    // 'c' denotes a placed clock.
+    // 'c' denotes a placed/picked clock.
 
     public int RenderChunkWidth { get { return renderChunkWidth; } }
     public int LeftmostGlobalX { get { return leftChunkLimit; }}
@@ -60,6 +60,8 @@ public class GeneratedTileMap : TileMap
                 if (cellCode == 'C') {
                     ClockItem clock = (ClockItem) clockScene.Instance();
                     clock.GlobalPosition = MapToWorld(new Vector2(iterator.GlobalX, j)) + (new Vector2(32F, 32F));
+                    clock.ExtraTime = iterator.ClockExtraTime;
+                    clock.SourceGeneColumn = iterator;
                     AddChild(clock);
                     iterator.ClockPlaced = true;
                     break; // Not necessary to preceed

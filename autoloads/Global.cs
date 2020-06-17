@@ -17,7 +17,7 @@ public class Global : Node
             renderWidth = value;
         }
     }
-    private static int geneticWidth = 100;
+    private static int geneticWidth = 30;
     public static int GeneticWidth {
         get { return geneticWidth; }
         set {
@@ -31,6 +31,14 @@ public class Global : Node
 
     public static MapGeneratorTest MainScene;
     public static Player Player;
+    public static int MappedPlayerX {
+        get {
+            if (Player != null && MainScene != null && MainScene.tilemap != null) {
+                return (int) MainScene.tilemap.WorldToMap(Player.GlobalPosition).x;
+            }
+            return 0;
+        }
+    }
 
     public override void _Input(InputEvent @event) {
         if (@event.IsActionPressed("quit")) {

@@ -97,7 +97,7 @@ public class MapIndividual {
         int groundFitness = 0;
         int holeLength = 0;
         for (GeneColumn x = this.Head.Next; x.Next != null; x = x.Next) {
-            if (x.Previous.GroundHeight == 0) {
+            if (x.Previous.ObstacleHeight == 0) {
                 holeLength++;
                 if (holeLength > maxJumpableHole) {
                     groundFitness -= 100;
@@ -105,7 +105,7 @@ public class MapIndividual {
             } else {
                 holeLength = 0;
             }
-            var ghDiff = Mathf.Abs(x.Previous.GroundHeight - x.GroundHeight);
+            var ghDiff = Mathf.Abs(x.Previous.ObstacleHeight - x.ObstacleHeight);
             if (ghDiff > jumpLimit) {
                 groundFitness -= 100 * ghDiff;
             } else {
@@ -246,10 +246,10 @@ public class MapIndividual {
         for (var x = GenerationHead.Next; x != GenerationTail.Next; x = x.Next) {
 
             // Check for unreacheable height diffs
-            var obstacleDiff = x.GroundHeight - x.Previous.GroundHeight;
+            var obstacleDiff = x.ObstacleHeight - x.Previous.ObstacleHeight;
             if (Mathf.Abs(obstacleDiff) > jumpLimit) {
                 x.GroundHeight += -obstacleDiff + Mathf.Sign(obstacleDiff);
-                currentObstacleHeight = x.GroundHeight; // Update height
+                currentObstacleHeight = x.ObstacleHeight; // Update height
             }
 
             // TODO: Check this
@@ -265,7 +265,7 @@ public class MapIndividual {
 
             // Check for lengthy spikes
             if (x.HasSpike) {
-                var obsDiff = x.GroundHeight - x.Previous.GroundHeight;
+                var obsDiff = x.ObstacleHeight - x.Previous.ObstacleHeight;
                 spikeLength += 1 + obsDiff;
                 if (spikeLength > maxSpikeDistance) {
                     mutateSpikeAtX(x); // This toggles spike here

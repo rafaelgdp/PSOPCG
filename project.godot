@@ -73,7 +73,6 @@ restart={
 [mono]
 
 debugger_agent/port=23690
-debugger_agent/wait_for_debugger=true
 
 [rendering]
 
