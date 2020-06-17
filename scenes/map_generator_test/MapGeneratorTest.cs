@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Godot;
 
 public class MapGeneratorTest : Node2D
@@ -54,11 +55,22 @@ public class MapGeneratorTest : Node2D
     private void CheckWorldUpdate() {
         var mappedPlayerPosX = (int) tilemap.WorldToMap(player.GlobalPosition).x;
         
-        if (mappedPlayerPosX < (tilemap.mMapGenerator.LeftmostGlobalX + generationToleranceOffset)) {
-            tilemap.mMapGenerator.GenerateChunksOnLeft(2);
+        if ((mappedPlayerPosX < (tilemap.mMapGenerator.LeftmostGlobalX + generationToleranceOffset))
+            && !Global.IsLeftGenBusy) {
+                Global.IsLeftGenBusy = true;
+                Task.Factory.StartNew(() => {
+                    tilemap.mMapGenerator.GenerateChunksOnLeft(2);
+                    Global.IsLeftGenBusy = false;
+                });
         }
-        if (mappedPlayerPosX > (tilemap.mMapGenerator.RightmostGlobalX - generationToleranceOffset)) {
-            tilemap.mMapGenerator.GenerateChunksOnRight(2);
+
+        if ((mappedPlayerPosX > (tilemap.mMapGenerator.RightmostGlobalX - generationToleranceOffset))
+            && !Global.IsRightGenBusy) {
+                Global.IsRightGenBusy = true;
+                Task.Factory.StartNew(() => {
+                    tilemap.mMapGenerator.GenerateChunksOnRight(2);
+                    Global.IsRightGenBusy = false;
+                });
         }
 
         if (mappedPlayerPosX < (tilemap.LeftmostGlobalX + renderToleranceOffset) ||

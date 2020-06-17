@@ -51,30 +51,37 @@ public class GeneratedTileMap : TileMap
         mMapGenerator.SetCurrentChunkHead(leftChunkLimit);
         mMapGenerator.SetCurrentChunkTail(rightChunkLimit);
         
-        for (   GeneColumn iterator = mMapGenerator.CurrentChunkHead;
-                iterator != mMapGenerator.CurrentChunkTail.Next;
-                iterator = iterator.Next) {
-            
-            for(int j = 0; j > -mMapGenerator.MaxHeight; j--) { // Height is inverted
-                char cellCode = iterator.CellAtY(j);
-                if (cellCode == 'C') {
-                    ClockItem clock = (ClockItem) clockScene.Instance();
-                    clock.GlobalPosition = MapToWorld(new Vector2(iterator.GlobalX, j)) + (new Vector2(32F, 32F));
-                    clock.ExtraTime = iterator.ClockExtraTime;
-                    clock.SourceGeneColumn = iterator;
-                    AddChild(clock);
-                    iterator.ClockPlaced = true;
-                    break; // Not necessary to preceed
-                } else {
-                    SetCell(iterator.GlobalX, j, tileFromCode(cellCode));
+        for (int i = 0; i < 2; i++) {
+            /*
+                This external for is a "workaround" for the weird ground block being
+                placed in lieu of a few clock items.
+                The second pass seems to fix it.
+            */
+            for (   GeneColumn iterator = mMapGenerator.CurrentChunkHead;
+                    iterator != mMapGenerator.CurrentChunkTail.Next;
+                    iterator = iterator.Next) {
+                
+                for(int j = 0; j > -mMapGenerator.MaxHeight; j--) { // Height is inverted
+                    char cellCode = iterator.CellAtY(j);
+                    if (cellCode == 'C') {
+                        ClockItem clock = (ClockItem) clockScene.Instance();
+                        clock.GlobalPosition = MapToWorld(new Vector2(iterator.GlobalX, j)) + (new Vector2(32F, 32F));
+                        clock.ExtraTime = iterator.ClockExtraTime;
+                        clock.SourceGeneColumn = iterator;
+                        AddChild(clock);
+                        iterator.ClockPlaced = true;
+                        break; // Not necessary to preceed
+                    } else {
+                        SetCell(iterator.GlobalX, j, tileFromCode(cellCode));
+                    }
                 }
-            }
-            if (iterator.GlobalX % 10 == 0 && !placedXLabels.Contains(iterator.GlobalX)) {
-                // Place a Global X Label
-                CellXLabel xlabel = (CellXLabel) cellXLabelScene.Instance();
-                xlabel.GlobalX = iterator.GlobalX;
-                xlabel.GlobalPosition = MapToWorld(new Vector2(iterator.GlobalX, -9)) + (new Vector2(32F, 32F));
-                AddChild(xlabel);
+                if (iterator.GlobalX % 10 == 0 && !placedXLabels.Contains(iterator.GlobalX)) {
+                    // Place a Global X Label
+                    CellXLabel xlabel = (CellXLabel) cellXLabelScene.Instance();
+                    xlabel.GlobalX = iterator.GlobalX;
+                    xlabel.GlobalPosition = MapToWorld(new Vector2(iterator.GlobalX, -9)) + (new Vector2(32F, 32F));
+                    AddChild(xlabel);
+                }
             }
         }
     }

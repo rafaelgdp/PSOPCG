@@ -81,8 +81,9 @@ public class GAMapGenerator {
         int numberOfChunksOnLeft = numberOfChunks / 2;
         int numberOfChunksOnRight = numberOfChunks - numberOfChunksOnLeft;
         GenerateChunksOnLeft(numberOfChunksOnLeft);
+        Global.IsLeftGenBusy = false; // Allow parallel left gens
         GenerateChunksOnRight(numberOfChunksOnRight);
-        Debug.Log("All done?");
+        Global.IsRightGenBusy = false; // Allow parallel right gens
     }
 
     private void createBaseChunkAroundX(int initialOrigin, int baseChunkSize) {
