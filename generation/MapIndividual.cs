@@ -71,9 +71,6 @@ public class MapIndividual {
         int spikeFitness = 0;
         int spikeLength = 0;
         for (GeneColumn x = this.Head; x != null; x = x.Next) {
-            Debug.Log($"===============\nx atual: {x}");
-            Debug.Log($"x anterior: {x.Previous}");
-            Debug.Log($"x.Next is: {x.Next}\n===============");
             if (x.HasSpike) {
                 x = x.Next;
                 spikeLength = 1;
