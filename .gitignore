@@ -366,3 +366,4 @@ build/
 *.old
 *.old.*
 addons/
+*.csv

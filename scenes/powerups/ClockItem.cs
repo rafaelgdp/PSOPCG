@@ -39,6 +39,7 @@ public class ClockItem : Area2D
             Tween t = new Tween();
             t.InterpolateProperty(sprite, "modulate", sprite.Modulate, Colors.Transparent, 1F);
             extraTimeLabel.Text = $"+{ExtraTime:0.0}";
+            Debug.Log($"Extratime: {ExtraTime}");
             extraTimeLabel.Visible = true;
             t.InterpolateProperty(extraTimeLabel, "rect_position", extraTimeLabel.RectPosition, extraTimeLabel.RectPosition + (Vector2.Up * 40F), 2F);
             AddChild(t);

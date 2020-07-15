@@ -57,6 +57,11 @@
     <Compile Include="autoloads\Debug.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="scenes\DebugLabel.cs" />
+    <Compile Include="scenes\map_generator_analysis\TestResult.cs" />
+    <Compile Include="scenes\map_generator_analysis\GenerationResult.cs" />
+    <Compile Include="scenes\map_generator_analysis\MapGeneratorAnalyzer.cs" />
+    <Compile Include="scenes\map_generator_analysis\TestConfiguration.cs" />
+    <Compile Include="scenes\map_generator_analysis\RTLLog.cs" />
     <Compile Include="scenes\map_generator_test\MapGeneratorTest.cs" />
     <Compile Include="scenes\map_generator_test\ParametersUI.cs" />
     <Compile Include="scenes\player\Player.cs" />

@@ -20,6 +20,13 @@ public class MapIndividual {
         }
     }
 
+    public bool IsPlayable {
+        get {
+            // TODO: implement algorithm that determines playability
+            return true;
+        }
+    }
+
     public MapIndividual(GeneColumn head) {
         this.Head = head;
         var iterator = head;
@@ -41,23 +48,32 @@ public class MapIndividual {
     }
 
     public MapIndividual(GeneColumn head, GeneColumn generationHead, GeneColumn generationTail, bool isLeftGeneration) {
+        
         this.Head = head;
         this.GenerationHead = generationHead;
         this.GenerationTail = generationTail;
         this.IsLeftGeneration = isLeftGeneration;
-        GeneColumn iterator = GenerationTail;
+        
+        GeneColumn iterator;
+        if (generationTail != null) {
+            iterator = GenerationTail;
+        } else {
+            iterator = Head;
+        }
         while(iterator.Next != null) { iterator = iterator.Next; }
         this.Tail = iterator;
         this.Width = this.Tail.GlobalX - this.Head.GlobalX + 1;
+
     }
 
     public int GetFitness() {
 
-        int fitness = 1000;
+        int fitness = 10000;
 
         fitness += getGroundFitness();
         fitness += getSpikeFitness();
         fitness += getClockFitness();
+        fitness += getSafeJumpFitness();
         
         cachedFitness = fitness;
         isFitnessUpdated = true;
@@ -90,6 +106,18 @@ public class MapIndividual {
 
     int jumpLimit = 2;
     int maxJumpableHole = 4;
+
+    private int getSafeJumpFitness() {
+        int safeJumpFitness = 0;
+        GeneColumn currentGC = this.Head;
+        while(currentGC != null) {
+            
+        }
+
+        
+        return safeJumpFitness;
+    }
+
     private int getGroundFitness() {
         int groundFitness = 0;
         int holeLength = 0;
@@ -114,7 +142,7 @@ public class MapIndividual {
     }
 
     private int getClockFitness() {
-        float idealExtraTime = ((Width) * Global.TilePixelWidth / Global.PlayerMaxSpeed) * 1.2F;
+        float idealExtraTime = ((Width) * Global.TilePixelWidth / Global.PlayerMaxSpeed) * 15.0F;
         float extraTime = 0F;
 
         for (GeneColumn x = this.Head; x != null; x = x.Next) {
@@ -202,10 +230,20 @@ public class MapIndividual {
                 mutateSpikeAtX(x);
             }
             if (r.NextDouble() < mutationRate) {
-                // Spike mutation
+                // Clock mutation
                 mutateClockAtX(x);
             }
+            if (r.NextDouble() < mutationRate) {
+                // Clock extra time mutation
+                mutateClockExtraTimeAtX(x);
+            }
         }
+        isFitnessUpdated = false;
+    }
+
+    private void mutateClockExtraTimeAtX(GeneColumn x)
+    {
+        x.ClockExtraTime += (float) random.NextDouble() - 0.5F;
     }
 
     private void mutateClockAtX(GeneColumn x)
