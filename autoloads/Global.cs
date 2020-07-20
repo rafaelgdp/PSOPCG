@@ -8,7 +8,8 @@ public class Global : Node
     public static float Friction = 1000F;
     public static int Population = 30;
     public static int TilePixelWidth = 64;
-    public static float PlayerMaxSpeed = 500F;
+    public static float PlayerMaxXSpeed = 500F;
+    public static float PlayerJumpForce = -Global.Gravity * 0.59F;
     private static int renderWidth = 50;
     public static int RenderWidth {
         get { return renderWidth; }

@@ -45,10 +45,15 @@ public class MapIndividual {
         while(iterator.Next != null) { iterator = iterator.Next; }
         this.Tail = iterator;
         this.Width = this.Tail.GlobalX - this.Head.GlobalX + 1;
+        this.maxSpikes = this.Width / 10F;
     }
 
     public MapIndividual(GeneColumn head, GeneColumn generationHead, GeneColumn generationTail, bool isLeftGeneration) {
         
+        if (!arePlayerMoveConstsCalculated) {
+            calculatePlayerMoveConstants();
+        }
+
         this.Head = head;
         this.GenerationHead = generationHead;
         this.GenerationTail = generationTail;
@@ -63,12 +68,13 @@ public class MapIndividual {
         while(iterator.Next != null) { iterator = iterator.Next; }
         this.Tail = iterator;
         this.Width = this.Tail.GlobalX - this.Head.GlobalX + 1;
+        this.maxSpikes = this.Width / 10F;
 
     }
 
     public int GetFitness() {
 
-        int fitness = 10000;
+        int fitness = 200 * this.Width;
 
         fitness += getGroundFitness();
         fitness += getSpikeFitness();
@@ -81,41 +87,127 @@ public class MapIndividual {
         return fitness;
     }
 
-    static int maxSpikeDistance = 4;
+    static int maxJumpStraightXDistance = 4;
     static int spikePenalty = 20;
+    float maxSpikes = 1;
     private int getSpikeFitness() {
         int spikeFitness = 0;
         int spikeLength = 0;
+        int totalSpikes = 0;
         for (GeneColumn x = this.Head; x != null; x = x.Next) {
             if (x.HasSpike) {
+                totalSpikes++;
                 x = x.Next;
                 spikeLength = 1;
                 while(x != null && x.HasSpike) {
                     x = x.Next;
                     spikeLength++;
+                    totalSpikes++;
                 }
                 // Compute fitness penalty
-                if (spikeLength > maxSpikeDistance) {
+                if (spikeLength > maxJumpStraightXDistance) {
                     spikeFitness -= spikeLength * spikePenalty;
                 }
             }
             if (x == null) break;
         }
+
+        // Also, if there are too many spikes in chunk, penalize as well.
+        if (totalSpikes > maxSpikes) {
+            spikeFitness -= (totalSpikes - (int) maxSpikes) * spikePenalty;
+        }
+
         return spikeFitness;
     }
 
-    int jumpLimit = 2;
-    int maxJumpableHole = 4;
-
+    static int maxBlockJumpHeight = 2;
+    static float maxJumpHeight = 0F;
+    static float timeToWalkTile = 999F;
+    static bool arePlayerMoveConstsCalculated = false;
+    static void calculatePlayerMoveConstants() {
+        // Max Jump Height in a perfectly vertical jump
+        // v = v0 + a * t
+        float airTimeToMaxHeight = -Global.PlayerJumpForce / Global.Gravity;
+        // s = s0 + v0*t + (a * (t**2) / 2)
+        maxJumpHeight = Global.PlayerJumpForce * airTimeToMaxHeight +
+                              (Global.Gravity * (airTimeToMaxHeight * airTimeToMaxHeight) / 2F);
+        maxBlockJumpHeight = (int) maxJumpHeight / Global.TilePixelWidth;
+        
+        // Calculate array of reacheable blocks over jump parabola
+        timeToWalkTile = Global.TilePixelWidth / Global.PlayerMaxXSpeed;
+        arePlayerMoveConstsCalculated = true;
+    }
     private int getSafeJumpFitness() {
+        /*
+            For each safe tile, perform a jump to the neighbor safe spots
+            For each safe jump, add a small fitness bonus.
+            If there are no possible safe jumps for a given safe block,
+            apply a great penalty and remove all the points added so far
+            for this block.
+        */
         int safeJumpFitness = 0;
-        GeneColumn currentGC = this.Head;
-        while(currentGC != null) {
-            
+        GeneColumn currentGC = this.Head; // Start from left to right.
+        int contiguousHazards = 0;
+        int contiguousHazardsPenalty = 50;
+        
+        // From the first safe spot, try to perform a jump to the next
+        // safe block.
+        while (currentGC != null) {
+            GeneColumn nextSafe = currentGC.NextSafe();
+            if (!isJumpPossible(currentGC, nextSafe)) {
+                if (nextSafe == null) {
+                    contiguousHazards = this.Tail.GlobalX - currentGC.GlobalX;
+                } else {
+                    contiguousHazards = nextSafe.Previous.GlobalX - currentGC.GlobalX;
+                }
+                // If there were too many contiguous hazards, apply penalty.
+                if (contiguousHazards > maxJumpStraightXDistance) {
+                    safeJumpFitness += -contiguousHazardsPenalty * contiguousHazards;
+                }
+            }
+            currentGC = nextSafe;
         }
 
+        currentGC = this.Tail; // Now from right to left.
+        contiguousHazards = 0;
         
+        while (currentGC != null) {
+            GeneColumn previousSafe = currentGC.PreviousSafe();
+            if (!isJumpPossible(currentGC, previousSafe)) {
+                if (previousSafe == null) {
+                    contiguousHazards = currentGC.GlobalX - this.Head.GlobalX;
+                } else {
+                    contiguousHazards = currentGC.GlobalX - previousSafe.Next.GlobalX;
+                }
+                // If there were too many contiguous hazards, apply penalty.
+                if (contiguousHazards > maxJumpStraightXDistance) {
+                    safeJumpFitness += -contiguousHazardsPenalty * contiguousHazards;
+                }
+            }
+            currentGC = previousSafe;
+        }
+
         return safeJumpFitness;
+    }
+
+    static bool isJumpPossible(GeneColumn start, GeneColumn end) {
+        if (start == null || end == null) return false;
+        int xBlockDistance = Mathf.Abs(start.GlobalX - end.GlobalX);
+        int direction = start.GlobalX < end.GlobalX ? 1 : -1;
+        GeneColumn iterator = start.SeekNthColumn(direction);
+        float xPixelDistance = xBlockDistance * Global.TilePixelWidth;
+        float d = xPixelDistance;
+        float H = maxJumpHeight;
+        float K = -4 * H / (d * d);
+        for (int i = 1; i <= xBlockDistance; i++) {
+            float xi = Global.TilePixelWidth * i;
+            float yi = K * xi * (xi - d);
+            int maxObstacleHeight = (int) (yi / Global.TilePixelWidth) + start.ObstacleHeight;
+            if (maxObstacleHeight < iterator.ObstacleHeight) return false;
+            iterator = iterator.SeekNthColumn(direction);
+            if (iterator == null) return false;
+        }
+        return true;
     }
 
     private int getGroundFitness() {
@@ -124,14 +216,14 @@ public class MapIndividual {
         for (GeneColumn x = this.Head.Next; x.Next != null; x = x.Next) {
             if (x.Previous.ObstacleHeight == 0) {
                 holeLength++;
-                if (holeLength > maxJumpableHole) {
+                if (holeLength > maxJumpStraightXDistance) {
                     groundFitness -= 100;
                 }
             } else {
                 holeLength = 0;
             }
             var ghDiff = Mathf.Abs(x.Previous.ObstacleHeight - x.ObstacleHeight);
-            if (ghDiff > jumpLimit) {
+            if (ghDiff > maxBlockJumpHeight) {
                 groundFitness -= 100 * ghDiff;
             } else {
                 // The closer they are, the better
@@ -142,7 +234,7 @@ public class MapIndividual {
     }
 
     private int getClockFitness() {
-        float idealExtraTime = ((Width) * Global.TilePixelWidth / Global.PlayerMaxSpeed) * 15.0F;
+        float idealExtraTime = ((Width) * Global.TilePixelWidth / Global.PlayerMaxXSpeed) * 15.0F;
         float extraTime = 0F;
 
         for (GeneColumn x = this.Head; x != null; x = x.Next) {
@@ -211,7 +303,7 @@ public class MapIndividual {
     }
 
     private bool IsCrossOverXValid(GeneColumn leftParent, GeneColumn rightParent) {
-        return Mathf.Abs(leftParent.GroundHeight - rightParent.GroundHeight) < jumpLimit;
+        return Mathf.Abs(leftParent.GroundHeight - rightParent.GroundHeight) < maxBlockJumpHeight;
     }
 
     internal void Mutate(float mutationRate)
@@ -282,7 +374,7 @@ public class MapIndividual {
 
             // Check for unreacheable height diffs
             var obstacleDiff = x.ObstacleHeight - x.Previous.ObstacleHeight;
-            if (Mathf.Abs(obstacleDiff) > jumpLimit) {
+            if (Mathf.Abs(obstacleDiff) > maxBlockJumpHeight) {
                 x.GroundHeight += -obstacleDiff + Mathf.Sign(obstacleDiff);
                 currentObstacleHeight = x.ObstacleHeight; // Update height
             }
@@ -302,11 +394,11 @@ public class MapIndividual {
             if (x.HasSpike) {
                 var obsDiff = x.ObstacleHeight - x.Previous.ObstacleHeight;
                 spikeLength += 1 + obsDiff;
-                if (spikeLength > maxSpikeDistance) {
+                if (spikeLength > maxJumpStraightXDistance) {
                     mutateSpikeAtX(x); // This toggles spike here
                 }
             } else {
-                if (spikeLength > maxSpikeDistance || x.GroundHeight == 0) {
+                if (spikeLength > maxJumpStraightXDistance || x.GroundHeight == 0) {
                     if (x.Previous.HasSpike) {
                         mutateSpikeAtX(x.Previous); // This toggles spike here
                     }

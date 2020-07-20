@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 
 public class MapGeneratorAnalyzer : Node
 {
-    int[] populationSizes = {10, 25, 50, 100, 250, 500, 750, 1000};
-    float[] mutationRates = {0.01F, 0.025F, 0.05F, 0.1F};
+    int[] populationSizes = {10, 25, 50, 75, 100, 150, 200, 250};
+    float[] mutationRates = {0.005F, 0.01F, 0.025F, 0.05F, 0.1F};
     int[] maxIterations = {1000};
     
     RTLLog logLabel;

@@ -3,19 +3,19 @@ using Godot;
 public class Player : KinematicBody2D
 {
     [Signal]
-    public delegate void PlayerReady(KinematicBody2D me);
+    public delegate void PlayerReady(Player me);
 
     [Signal]
     public delegate void PlayerExitedScreen();
 
     [Export]
-    public float MaxSpeed = Global.PlayerMaxSpeed;
+    public float MaxSpeed = Global.PlayerMaxXSpeed;
 
     [Export]
     float minSpeed = 10F;
 
     [Export]
-    float jumpForce = -Global.Gravity * 0.59F;
+    float jumpForce = Global.PlayerJumpForce;
 
     [Export]
     float acceleration = 2000F;

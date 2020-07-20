@@ -19,6 +19,13 @@ public class GeneColumn {
             }
         }
     }
+
+    public bool IsSafe {
+        get {
+            if (HasSpike || GroundHeight == 0) return false;
+            return true;
+        }
+    }
     private bool hasSpike = false;
     public bool HasSpike {
         get{
@@ -151,5 +158,23 @@ public class GeneColumn {
     public override string ToString() {
         String r = $"gX: {GlobalX}, uid: {myuid}, GroundHeight: {GroundHeight}, HasSpike: {HasSpike}, HasClock: {HasClock}, ClockExtraTime: {ClockExtraTime}.";
         return r;
+    }
+
+    public GeneColumn PreviousSafe() {
+        GeneColumn iterator = Previous;
+        while (iterator != null) {
+            if (iterator.IsSafe) return iterator;
+            iterator = iterator.Previous;
+        }
+        return null;
+    }
+
+    public GeneColumn NextSafe() {
+        GeneColumn iterator = Next;
+        while (iterator != null) {
+            if (iterator.IsSafe) return iterator;
+            iterator = iterator.Next;
+        }
+        return null;
     }
 }
