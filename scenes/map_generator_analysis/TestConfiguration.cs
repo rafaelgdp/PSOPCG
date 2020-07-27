@@ -9,6 +9,7 @@ public class TestConfiguration {
     int MaxIterations;
     int RefChunkSize;
     int GenChunkSize;
+    float Elitism;
     public GAMapGenerator Generator;
     public TestResult Result;
 
@@ -16,6 +17,7 @@ public class TestConfiguration {
     public TestConfiguration(
         int populationSize,
         float mutationRate,
+        float elitism,
         int maxIterations,
         int genChunkSize,
         int refChunkSize) {
@@ -26,7 +28,8 @@ public class TestConfiguration {
         this.MaxIterations = maxIterations;
         this.RefChunkSize = refChunkSize;
         this.GenChunkSize = genChunkSize;
-        this.Generator = new GAMapGenerator(5, genChunkSize, 12, 0, populationSize, mutationRate, 10, false);
+        this.Elitism = elitism;
+        this.Generator = new GAMapGenerator(5, genChunkSize, 12, 0, populationSize, mutationRate, elitism, 10, false);
     }
 
     public void StartTest(RTLLog log = null) {
@@ -46,7 +49,7 @@ public class TestConfiguration {
             testData.StoreCsvLine(GenerationResult.GetHeaderStringArray());
         }
         if (log != null) {
-            log.LogLine($"Initiating test id {this.TestId} with config: popSize {this.PopulationSize}, mutRate {MutationRate}, maxIterations {MaxIterations}.");
+            log.LogLine($"Initiating test id {this.TestId} with config: popSize {this.PopulationSize}, mutRate {MutationRate}, elitism {Elitism}, maxIterations {MaxIterations}.");
         }
         // First generation of this test batch
         // Start timer to track ellapsed time per generation
@@ -67,6 +70,7 @@ public class TestConfiguration {
             PopulationSize = this.PopulationSize,
             GenChunkSize = this.GenChunkSize,
             MutationRate = this.MutationRate,
+            Elitism = this.Elitism,
         };
         watch.Stop();
         currentGenerationResult.ExecutionTimeMs = watch.ElapsedMilliseconds;
@@ -86,7 +90,8 @@ public class TestConfiguration {
                 FitnessMedian =  getFitnessMedian(population),
                 PopulationSize = this.PopulationSize,
                 GenChunkSize = this.GenChunkSize,
-                MutationRate = this.MutationRate
+                MutationRate = this.MutationRate,
+                Elitism = this.Elitism,
             };
             watch.Stop();
             currentGenerationResult.ExecutionTimeMs = watch.ElapsedMilliseconds;

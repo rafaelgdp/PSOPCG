@@ -69,6 +69,7 @@ public class GAMapGenerator {
     public GAMapGenerator(  int referenceChunkSize, int generationChunkSize,
                             int maxHeight, int initialOrigin,
                             int populationSize = 100, float mutationRate = 0.05F,
+                            float elitism = 0.05F,
                             int numberOfChunks = 10, bool shouldPregen = true
                         ) {
         this.referenceChunkSize = referenceChunkSize;
@@ -77,6 +78,7 @@ public class GAMapGenerator {
         this.mutationRate = mutationRate;
         this.maxIterations = Global.MaxIterations;
         this.maxHeight = maxHeight;
+        this.elitism = elitism;
         createBaseChunkAroundX(initialOrigin, 5);
         if (shouldPregen) {
             int numberOfChunksOnLeft = numberOfChunks / 2;
@@ -93,7 +95,7 @@ public class GAMapGenerator {
                             int populationSize = 100, float mutationRate = 0.05F,
                             bool shouldPregen = true
                         ) : this(referenceChunkSize, generationChunkSize, maxHeight,
-                                initialOrigin, populationSize, mutationRate, 10, shouldPregen) {}
+                                initialOrigin, populationSize, mutationRate, 0.05F, 10, shouldPregen) {}
 
     private void createBaseChunkAroundX(int initialOrigin, int baseChunkSize) {
         // Here, we are initializing the first base reference chunk

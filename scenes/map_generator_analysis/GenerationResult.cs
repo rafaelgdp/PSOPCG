@@ -12,6 +12,7 @@ public class GenerationResult {
     public int PopulationSize;
     public int GenChunkSize;
     public float MutationRate;
+    public float Elitism;
     public double ExecutionTimeMs;
 
     public static string[] GetHeaderStringArray() {
@@ -26,6 +27,7 @@ public class GenerationResult {
             "PopulationSize",
             "GenChunkSize",
             "MutationRate",
+            "Elitism",
             "ExecutionTimeMs"
         };
         return csvHeaderArray;
@@ -42,6 +44,7 @@ public class GenerationResult {
             $"{PopulationSize}",
             $"{GenChunkSize}",
             $"{MutationRate}",
+            $"{Elitism}",
             $"{ExecutionTimeMs}"
         };
         return csvStringArray;
