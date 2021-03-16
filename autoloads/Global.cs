@@ -28,6 +28,7 @@ public class Global : Node
 
     public static int MaxIterations = 10;
     public static float MutationRate = 0.05F;
+    public static float ElitismRate = 0.05F;
     public static bool IsRightGenBusy = true;
     public static bool IsLeftGenBusy = true;
 

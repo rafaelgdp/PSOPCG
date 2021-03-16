@@ -12,7 +12,8 @@ public class GeneratedTileMap : TileMap
         0,                   // baseXOrigin
         Global.Population,   // populationSize
         Global.MutationRate, // mutationRate
-        10);                  // numberOfInitialChunks
+        Global.ElitismRate,  // elitismRate
+        10);                 // numberOfInitialChunks
 
     public static Dictionary<char, int> TileDictionary = new Dictionary<char, int>() { 
         {'B', -1},
