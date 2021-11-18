@@ -190,5 +190,6 @@ bbcode_text = "[center]Time left: 25.00 s[/center]"
 text = "Time left: 25.00 s"
 scroll_active = false
 script = ExtResource( 6 )
+
 [connection signal="PlayerExitedScreen" from="Player" to="." method="OnPlayerExitedScreen"]
 [connection signal="pressed" from="DebugUI/ParametersUI/SetParamsButton" to="DebugUI/ParametersUI" method="OnSetParams"]

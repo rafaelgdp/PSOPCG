@@ -6,7 +6,7 @@ public class ClockItem : Area2D
     public float ExtraTime = 10F;
     public int GeneMatrixX = 0;
     public int GeneMatrixY = 0;
-    public GeneColumn SourceGeneColumn = null;
+    public ParticleColumn SourceParticleColumn = null;
     private bool picked = false;
     private CPUParticles2D particles;
     private CollisionShape2D collision;
@@ -63,8 +63,8 @@ public class ClockItem : Area2D
     }
 
     private void destroy() {
-        if (SourceGeneColumn != null && !picked) {
-            SourceGeneColumn.ClockPlaced = false;
+        if (SourceParticleColumn != null && !picked) {
+            SourceParticleColumn.ClockPlaced = false;
         }
         QueueFree();
     }

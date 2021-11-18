@@ -26,4 +26,5 @@ script = ExtResource( 3 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
 [connection signal="ready" from="." to="." method="_on_AnalysisScene_ready"]
