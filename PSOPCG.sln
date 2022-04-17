@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvoPCG", "EvoPCG.csproj", "{62DDED9F-5848-4E4F-A9B2-DCFAA503FB5B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PSOPCG", "PSOPCG.csproj", "{62DDED9F-5848-4E4F-A9B2-DCFAA503FB5B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

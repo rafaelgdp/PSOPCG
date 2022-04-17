@@ -1,34 +1,49 @@
 using Godot;
+using System.Collections.Generic;
 
 public class Global : Node
 {
+	public static Dictionary<string, double> Parameters = new Dictionary<string, double>() {
+		{ "Population", 30 },
+		{ "MaxIterations", 10 },
+		{ "ParticleWidth", 30 },
+		{ "ParticleReferenceWidth", 10 },
+		{ "W", 0.01 },
+		{ "Cmin", 0.05 },
+		{ "Cmax", 0.35 },
+		{ "Rmin", 0.0 },
+		{ "Rmax", 0.2 }
+	};
 
-	public static bool IsDebug = true;
+	public static bool IsDebug = false;
 	public static float Gravity = 1000F;
 	public static float Friction = 1000F;
-	public static int Population = 30;
+	public static int Population {
+		get {
+			return (int)Parameters["Population"];
+		}
+
+		set {
+			Parameters["Population"] = value;
+		}
+	}
 	public static int TilePixelWidth = 64;
 	public static float PlayerMaxXSpeed = 500F;
-	public static float PlayerJumpForce = -Global.Gravity * 0.59F;
-	private static int renderWidth = 50;
-	public static int RenderWidth {
-		get { return renderWidth; }
+	public static float PlayerJumpForce = -Gravity * 0.59F;
+	public static int RenderWidth  = 60;
+	public static float InitialTimeLeft = 25F;
+	public static int ParticleWidth {
+		get { return (int) Parameters["ParticleWidth"]; }
 		set {
-			// TODO: Adjust render width with window size.
-			renderWidth = 60;
+			Parameters["ParticleWidth"] = value;
 		}
 	}
-	private static int geneticWidth = 30;
-	public static int GeneticWidth {
-		get { return geneticWidth; }
+	public static int MaxIterations {
+		get { return (int) Parameters["MaxIterations"]; }
 		set {
-			geneticWidth = value;
+			Parameters["MaxIterations"] = value;
 		}
 	}
-
-	public static int MaxIterations = 10;
-	public static float MutationRate = 0.05F;
-	public static float ElitismRate = 0.05F;
 	public static bool IsRightGenBusy = true;
 	public static bool IsLeftGenBusy = true;
 

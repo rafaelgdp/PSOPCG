@@ -40,9 +40,7 @@ tracks/0/keys = {
 "values": [ Color( 1, 1, 1, 1 ) ]
 }
 
-[node name="Player" type="KinematicBody2D" groups=[
-"player",
-]]
+[node name="Player" type="KinematicBody2D" groups=["player"]]
 script = ExtResource( 2 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -63,5 +61,6 @@ one_shot = true
 [node name="HurtAnimationPlayer" type="AnimationPlayer" parent="."]
 anims/hurt = SubResource( 2 )
 anims/normal = SubResource( 3 )
+
 [connection signal="screen_exited" from="VisibilityNotifier2D" to="." method="OnExitedScreen"]
 [connection signal="timeout" from="HurtCooldownTimer" to="." method="onHurtCooldownTimerTimeout"]

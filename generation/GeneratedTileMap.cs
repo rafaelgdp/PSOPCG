@@ -6,12 +6,12 @@ public class GeneratedTileMap : TileMap
 	[Export]
 	private int cellSize = 64;
 	public PSOMapGenerator mMapGenerator = new PSOMapGenerator(
-		Global.GeneticWidth, // referenceChunkSize
-		Global.GeneticWidth, // generationChunkSize
-		12,                  // maxHeight
-		0,                   // baseXOrigin
-		Global.Population,   // populationSize
-		10);                 // numberOfInitialChunks
+		(int) Global.Parameters["ParticleReferenceWidth"], 	// referenceChunkSize
+		(int) Global.Parameters["ParticleWidth"], 			// generationChunkSize
+		12,                  								// maxHeight
+		0,                   								// baseXOrigin
+		(int) Global.Parameters["Population"],   			// populationSize
+		10);                 								// numberOfInitialChunks
 
 	public static Dictionary<char, int> TileDictionary = new Dictionary<char, int>() { 
 		{'B', -1},

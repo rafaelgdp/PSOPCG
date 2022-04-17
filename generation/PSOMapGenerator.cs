@@ -64,11 +64,11 @@ public class PSOMapGenerator {
 	private int generationChunkSize = 60;
 	private int baseChunkSize { get { return referenceChunkSize + generationChunkSize; }}
 
-	private double paramW = 0.01;
-	private double paramCMin = 0.05;
-	private double paramCMax = 0.35;
-	private double paramRMin = 0.0;
-	private double paramRMax = 0.2;
+	private double paramW = Global.Parameters["W"];
+	private double paramCMin = Global.Parameters["Cmin"];
+	private double paramCMax = Global.Parameters["Cmax"];
+	private double paramRMin = Global.Parameters["Rmin"];
+	private double paramRMax = Global.Parameters["Rmax"];
 
 	public PSOMapGenerator(  int referenceChunkSize, int generationChunkSize,
 							int maxHeight, int initialOrigin,

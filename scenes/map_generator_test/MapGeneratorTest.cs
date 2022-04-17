@@ -12,7 +12,7 @@ public class MapGeneratorTest : Node2D
 
 	int generationToleranceOffset = 10;
 	int renderToleranceOffset = 10;
-	private static float timeLeft = 30F;
+	private static float timeLeft = Global.InitialTimeLeft;
 
 	public float TimeLeft {
 		set {
@@ -34,7 +34,7 @@ public class MapGeneratorTest : Node2D
 		player = GetNode<Player>("Player");
 		tilemap = GetNode<GeneratedTileMap>("GeneratedTileMap");
 		debugLabel = GetNode<RichTextLabel>("DebugUI/DebugLabel");
-		generationToleranceOffset = Global.GeneticWidth;
+		generationToleranceOffset = Global.ParticleWidth;
 		renderToleranceOffset = Global.RenderWidth / 4; // 25% offset tolerance 
 	}
 
